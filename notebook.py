@@ -1,3 +1,6 @@
+import json
+
+
 def isnotebook():
   try:
     shell = get_ipython().__class__.__name__
@@ -18,3 +21,12 @@ else:
   Image = None
   register_cell_magic = None
   register_line_magic = None
+
+
+def get_cells(notebook):
+  with open(notebook) as f:
+    data = json.load(f)
+  cells = data["cells"]
+  cells = [(cell["cell_type"], "".join(cell["source"])) for cell in cells
+           if cell["cell_type"] in ["code", "markdown"]]
+  return cells
