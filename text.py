@@ -21,6 +21,9 @@ class TextManager(object):
   def define(self, key, value):
     self._locals[key] = value
 
+  def common_definitions_for_crypto(self):
+    self._math_manager.common_definitions_for_crypto()
+
   def compile_math(self, code):
     try:
       return self._math_manager(code)
