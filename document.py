@@ -9,6 +9,8 @@ from juptex.figure import *
 from juptex.algorithm import *
 from juptex.errors import *
 from juptex.utils import *
+from juptex.keywords import *
+from juptex.author import *
 
 
 class DocumentManager(object):
