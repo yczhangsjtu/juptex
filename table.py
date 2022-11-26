@@ -1,5 +1,7 @@
 import os
+from numbers_parser import Document, TextCell
 from juptex.config import *
+from juptex.text import TextManager
 
 
 class Column(object):
@@ -180,7 +182,6 @@ class Table(object):
   def clear(self):
     self._columns = []
     self._rows = []
-    self._cross_columns = False
     self._caption = None
     self._left_border = 0
     self._right_border = 0
@@ -219,16 +220,13 @@ class Table(object):
   def caption(self, title):
     self._caption = self._paper.find_sentence(title)
 
-  def wide(self):
-    self._cross_columns = True
-
   def label(self):
     return "tab:" + to_label(self._name)
 
   def ref(self):
     return r"Table~\ref{%s}" % self.label()
 
-  def column(self, name):
+  def get_column(self, name):
     for column in self._columns:
       if column._name == name:
         return column
@@ -309,8 +307,9 @@ class Table(object):
           bottom_border = self._rows[i+1]._top_border
         else:
           bottom_border = max(row._bottom_border, self._rows[i+1]._top_border)
-        ret[-1] += "\\\\ "
-        ret[-1] += self.render_horizontal_border(bottom_border)
+        ret[-1] += "\\\\"
+        if bottom_border != 0:
+          ret[-1] += " " + self.render_horizontal_border(bottom_border)
     return "\n".join(ret)
 
   def dump_tabular(self):
@@ -337,6 +336,7 @@ class TableManager(object):
     self._text_manager = (text_manager if text_manager is not None
                           else TextManager(math_manager))
     self._locals = self._text_manager._locals
+    self._cross_columns = False
     self.define("mm", self._text_manager._math_manager)
 
   def get(self, key):
@@ -352,13 +352,15 @@ class TableManager(object):
   def common_definitions_for_crypto(self):
     self._text_manager.common_definitions_for_crypto()
 
-  def __call__(self, name, title):
+  def wide(self):
+    self._cross_columns = True
+
+  def read(self, name):
     if name.endswith(".numbers"):
-      doc = Document(os.path.join(root_path, name))
-      se = self._sentence_editor
-      sheets = doc.sheets()
-      tables = sheets[0].tables()
-      self.tabulars = []
+      tabulars = []
+      doc = Document(name)
+      sheets = doc.sheets
+      tables = sheets[0].tables
       self.name = name
       for table in tables:
         latex_table = Table(name)
@@ -371,11 +373,7 @@ class TableManager(object):
           sentences = []
           for j in range(n):
             if isinstance(data[i][j], TextCell):
-              sentence = se.get(data[i][j].value.strip())
-              if sentence is None:
-                sentences.append(se._interpolate(data[i][j].value.strip()))
-              else:
-                sentences.append(sentence)
+              sentences.append(self._text_manager(data[i][j].value.strip()))
             else:
               sentences.append(None)
           latex_table.add_row(
@@ -387,7 +385,19 @@ class TableManager(object):
             if isinstance(data[i][j], TextCell):
               latex_table.get_row(i)._cells[j].row_span(data[i][j].size[0])
               latex_table.get_row(i)._cells[j].col_span(data[i][j].size[1])
-        self.tabulars.append(latex_table)
-      self.title = se.get(title)
-      if not self.title:
-        self.title = se._interpolate(title)
+        tabulars.append(latex_table)
+      return tabulars
+    else:
+      raise ValueError("Can only support Numbers file now.")
+
+  def __call__(self, tabulars, title, label):
+    env_name = "table*" if self._cross_columns else "table"
+    return r"""\begin{%s}[ht]
+\caption{%s}
+\label{%s}
+%s
+\end{%s}""" % (env_name,
+               self._text_manager(title),
+               label,
+               "\n\n".join([tab.dump_tabular() for tab in tabulars]),
+               env_name)
