@@ -3,6 +3,8 @@ import os
 
 # Global configurations
 root_path = os.path.join(os.getenv("HOME"), ".juptex")
+essay_path = os.path.join(os.getenv("HOME"), "Documents/Essays")
+slide_path = os.path.join(os.getenv("HOME"), "Documents/Slides")
 
 # Matheq configurations
 python_mark = "!"

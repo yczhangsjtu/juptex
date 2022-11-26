@@ -1,0 +1,49 @@
+\documentclass[11pt]{llncs}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{bbm}
+\usepackage{url}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{pbox}
+\usepackage{tikz}
+\usepackage{xspace}
+\usepackage{todonotes}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\usepackage{cite}
+\usepackage{thmtools}
+\usepackage{thm-restate}
+\usepackage{cleveref}
+
+\renewcommand{\index}{\ensuremath{\mathbbm{i}}\xspace}
+\newcommand{\instance}{\ensuremath{\mathbbm{x}}\xspace}
+\newcommand{\witness}{\ensuremath{\mathbbm{w}}\xspace}
+\usetikzlibrary{positioning}
+<settings>
+
+\pagestyle{plain}
+
+\title{<title>}
+<author>
+\begin{document}
+  \maketitle
+  \begin{abstract}
+    \input{abstract}
+    <keywords>
+  \end{abstract}
+  \input{body}
+  \bibliographystyle{alpha}
+  \bibliography{reference}
+  \input{appendix}
+\end{document}

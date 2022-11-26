@@ -1,0 +1,69 @@
+\documentclass[sigconf]{acmart}
+
+\renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with conference information in first column
+\pagestyle{plain} % removes running headers
+
+\fancyhf{} % Remove fancy page headers 
+% \fancyhead[C]{Anonymous submission \#9999 to ACM CCS 2022} % TODO: replace 9999 with your paper number
+% \fancyfoot[C]{\thepage}
+
+\setcopyright{none} % No copyright notice required for submissions
+\acmConference[ACM CCS]{ACM Conference on Computer and Communications Security}
+\acmYear{2022}
+
+\settopmatter{printacmref=false, printccs=false, printfolios=true} % We want page numbers on submissions
+
+%%\ccsPaper{9999} % TODO: replace with your paper number once obtained
+
+% \usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+% \usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{bbm}
+\usepackage{url}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{pbox}
+\usepackage{tikz}
+\usepackage{xspace}
+\usepackage{todonotes}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\renewcommand{\index}{\ensuremath{\mathbbm{i}}\xspace}
+\newcommand{\instance}{\ensuremath{\mathbbm{x}}\xspace}
+\newcommand{\witness}{\ensuremath{\mathbbm{w}}\xspace}
+\usetikzlibrary{positioning}
+
+<settings>
+
+\title{<title>}
+
+<author>
+
+\begin{abstract}
+
+  \input{abstract}
+
+\end{abstract}
+
+<keywords>
+
+\begin{document}
+
+\maketitle
+
+  \input{body}
+  \bibliographystyle{alpha}
+  \bibliography{reference}
+  \input{appendix}
+
+\end{document}
