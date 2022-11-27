@@ -82,3 +82,4 @@ def map_with_merge(lst, f, g):
         ret[-1] = new_item
       else:
         ret.append(f(lst[i]))
+  return ret

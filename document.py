@@ -2,6 +2,7 @@ import os
 import re
 import json
 from pybtex.database import parse_file, BibliographyData
+from pathlib import Path
 from juptex.config import *
 from juptex.matheq import *
 from juptex.text import *
@@ -13,6 +14,7 @@ from juptex.errors import *
 from juptex.utils import *
 from juptex.keywords import *
 from juptex.author import *
+from juptex.notebook import *
 
 
 class DocumentManager(object):
@@ -148,9 +150,9 @@ class DocumentManager(object):
     is_slide = template == "beamer"
     target_path = slide_path if is_slide else essay_path
     script_path = Path(__file__).parent.absolute()
-    if not os.path.isdir(os.path.join(essay_path, self._name)):
-      os.mkdir(os.path.join(essay_path, self._name))
-    os.system(f"cp {script_dir}/templates/{template}/* "
+    if not os.path.isdir(os.path.join(target_path, self._name)):
+      os.mkdir(os.path.join(target_path, self._name))
+    os.system(f"cp {script_path}/templates/{template}/* "
               f"'{os.path.join(target_path, self._name)}'")
 
   def preprocess_cells(self, cells):
@@ -173,7 +175,7 @@ class DocumentManager(object):
   def _preprocess_markdown(self, content):
     if len(content.strip()) == 0:
       return {"type": "empty"}
-    if self.title is not None and content == "# The End":
+    if self._title is not None and content == "# The End":
       return {"type": "end"}
     lines = content.split("\n")
     start_line = lines[0].strip()
@@ -192,9 +194,6 @@ class DocumentManager(object):
       if title is not None:
         title = title[2:-1]
       return self._preprocess_environment(lines[1:], env_name, title, rest)
-
-    if start_line == "---":
-      return {"type": "endframe"}
 
     if start_line == "---":
       if lines[1].startswith("#### "):
@@ -535,7 +534,7 @@ class DocumentManager(object):
         if cell.get("type") in ["section", "subsection", "startslide"]:
           ret.append(cell)
           if cell.get("type") == "startslide":
-            slide_started = False
+            slide_started = True
         elif slide_started:
           ret.append(cell)
           if cell.get("type") == "endslide":
@@ -562,6 +561,10 @@ class DocumentManager(object):
     code_count = 0
 
     def f(cell):
+      if cell.get("type") == "paragraph":
+        new_cell = {**cell}
+        new_cell["type"] = "text"
+        return new_cell
       return cell
 
     def g(new_cell, original_cell, next_cell):
@@ -590,7 +593,7 @@ class DocumentManager(object):
             "content": new_cell["content"] + f"{connector}{code}",
         }
       if original_cell.get("type") == "math":
-        if next_cell.get("type") == "text":
+        if next_cell.get("type") == "paragraph":
           if original_cell["env"] == "$":
             connector = " "
           else:
@@ -606,7 +609,7 @@ class DocumentManager(object):
     """
     Second pass: compilation
     """
-    ret, cells = [], ret
+    ret = []
     belong = "body"
     target_path = slide_path if is_slide else essay_path
     slide_started = False
@@ -654,7 +657,7 @@ class DocumentManager(object):
         belong = "abstract"
       elif cell.get("type") == "appendix":
         belong = "appendix"
-      elif cell.get("type") == "paragraph":
+      elif cell.get("type") == "text":
         ret.append({
             "belong": belong,
             "content": ParagraphManager(self._text_manager)(
@@ -723,11 +726,15 @@ class DocumentManager(object):
             "belong": belong,
             "content": content
         })
+      elif cell.get("type") == "empty":
+        continue
       else:
-        ret.append(cell)
+        raise ValueError(f"Unknown cell {cell}")
 
     if slide_started:
       raise ValueError("Unended slide at the end of the document")
+
+    cells = ret
 
     """
     Finally, set the codes back.

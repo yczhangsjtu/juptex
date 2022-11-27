@@ -24,7 +24,7 @@ else:
 
 
 def get_cells(notebook):
-  with open(notebook) as f:
+  with open(f"{notebook}.ipynb") as f:
     data = json.load(f)
   cells = data["cells"]
   cells = [(cell["cell_type"], "".join(cell["source"])) for cell in cells
