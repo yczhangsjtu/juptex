@@ -22,8 +22,8 @@ Hello world, hello world, hello world.
     self.assertEqual(tm(r"""
 Hello _world_, hello world, hello world.
 Hello [[world]], **hello world**, hello world.
-Hello world $\sfC$, hello world <code>test_var</code>, hello world.
-Hello world, "hello world", <code>2**5</code> hello world $$\bbAlpha$$.
+Hello world $\sfC$, hello world `test_var`, hello world.
+Hello world, "hello world", `2**5` hello world $$\bbAlpha$$.
 """), r"""
 Hello \emph{world}, hello world, hello world.
 Hello~\cite{world}, \textbf{hello world}, hello world.

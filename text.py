@@ -47,7 +47,6 @@ class TextManager(object):
 
     while len(content) > 0:
       if mode == "normal":
-        python_index = content.find(python_start_mark)
         blockmath_index = content.find(blockmath_start_mark)
         math_index = content.find(math_start_mark)
         bold_index = content.find(bold_start_mark)
@@ -55,16 +54,17 @@ class TextManager(object):
         cite_index = content.find(cite_start_mark)
         pre_index = content.find(pre_start_mark)
         double_quote_index = content.find('"')
+        python_index = content.find(python_start_mark)
 
-        indices = [python_index, blockmath_index, math_index, bold_index,
-                   emph_index, cite_index, pre_index, double_quote_index]
-        modes = ["python", "blockmath", "math", "bold", "emph", "cite",
-                 "pre", "dquote"]
+        indices = [blockmath_index, math_index, bold_index, emph_index,
+                   cite_index, pre_index, double_quote_index, python_index]
+        modes = ["blockmath", "math", "bold", "emph", "cite",
+                 "pre", "dquote", "python"]
         start_mark_lengths = [
-            len(python_start_mark), len(blockmath_start_mark),
-            len(math_start_mark), len(bold_start_mark),
-            len(emph_start_mark), len(cite_start_mark), len(pre_start_mark),
-            len('"')]
+            len(blockmath_start_mark), len(math_start_mark),
+            len(bold_start_mark), len(emph_start_mark),
+            len(cite_start_mark), len(pre_start_mark),
+            len('"'), len(python_start_mark)]
 
         valid_indices = [(index, i)
                          for i, index in enumerate(indices)

@@ -28,7 +28,7 @@ class FigureManager(object):
     if not os.path.exists(self._image_path):
       os.mkdir(self._image_path)
     if not os.path.isdir(self._image_path):
-      raise IOError("./images is not a directory")
+      raise IOError(f"{self._image_path} is not a directory")
     shutil.copy(path_to_figure, "./images")
     env_name = "figure*" if wide else "figure"
     return r"""\begin{%s}[ht]

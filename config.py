@@ -14,7 +14,7 @@ space_holder = "~"
 math_indent = 2
 
 # Text parser configurations
-python_start_mark, python_end_mark = "<code>", "</code>"
+python_start_mark, python_end_mark = "`", "`"
 blockmath_start_mark, blockmath_end_mark = "$$", "$$"
 math_start_mark, math_end_mark = "$", "$"
 bold_start_mark, bold_end_mark = "**", "**"
