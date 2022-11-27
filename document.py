@@ -609,6 +609,7 @@ class DocumentManager(object):
     ret, cells = [], ret
     belong = "body"
     target_path = slide_path if is_slide else essay_path
+    slide_started = False
     for cell in cells:
       if cell.get("type") == "section":
         belong = "body"
@@ -629,6 +630,9 @@ class DocumentManager(object):
             ),
         })
       elif cell.get("type") == "startslide":
+        if slide_started:
+          raise ValueError(f"Slide already started: processing cell: {cell}")
+        slide_started = True
         title = cell.get("title")
         if title is not None:
           content = r"\begin{frame}\frametitle{%s}" % title
@@ -639,6 +643,9 @@ class DocumentManager(object):
             "content": content,
         })
       elif cell.get("type") == "endslide":
+        if not slide_started:
+          raise ValueError(f"Slide not started yet: processing cell: {cell}")
+        slide_started = False
         ret.append({
             "belong": belong,
             "content": r"\end{frame}",
@@ -718,6 +725,9 @@ class DocumentManager(object):
         })
       else:
         ret.append(cell)
+
+    if slide_started:
+      raise ValueError("Unended slide at the end of the document")
 
     """
     Finally, set the codes back.
