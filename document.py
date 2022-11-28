@@ -175,6 +175,7 @@ class DocumentManager(object):
   def _preprocess_markdown(self, content):
     if len(content.strip()) == 0:
       return {"type": "empty"}
+
     if self._title is not None and content == "# The End":
       return {"type": "end"}
     lines = content.split("\n")
@@ -218,6 +219,10 @@ class DocumentManager(object):
           "lines": ret_lines,
           "title": title,
       }
+
+    content, comments = extract_html_comment(content)
+    if content.strip() == "":
+      return {"type": "empty"}
 
     ret_lines = []
     for i in range(len(lines)):
