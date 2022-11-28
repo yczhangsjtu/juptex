@@ -23,3 +23,8 @@ cite_start_mark, cite_end_mark = "[[", "]]"
 pre_start_mark, pre_end_mark = "<raw>", "</raw>"
 space_placeholder = "<space>"
 bib_path = os.path.join(root_path, "reference.bib")
+
+# Reference
+reference_entry_black_list = [
+    "file", "abstract"
+]
