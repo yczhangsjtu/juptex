@@ -335,7 +335,7 @@ class DocumentManager(object):
   def _preprocess_code(self, content):
     if len(content.strip()) == 0:
       return {"type": "empty"}
-    lines = content.split()
+    lines = content.split("\n")
     start_line = lines[0].strip()
     if start_line.startswith("%%algorithm "):
       name = start_line[12:].strip()
@@ -578,39 +578,30 @@ class DocumentManager(object):
       return cell
 
     def g(new_cell, original_cell, next_cell):
+      nonlocal code_count
       if new_cell.get("type") == "text" and next_cell.get("type") == "math":
         content = self._text_manager._math_manager(next_cell["content"])
         if next_cell["env"] == "$":
           content = f"${content}$"
+        elif next_cell["env"] == r"\[":
+          content = f"\\[{content}\\]"
         else:
           content = r"""\begin{%s}
   %s
 \end{%s}""" % (next_cell["env"], content, next_cell["env"])
         code = f"mathequationcode{code_count}"
-        code += 1
+        code_count += 1
         code_dictionary[code] = content
-
-        if original_cell.get("type") != "math" or original_cell["env"] == "$":
-          if next_cell["env"] == "$":
-            connector = " "
-          else:
-            connector = "\n"
-        else:
-          connector = "\n"
 
         return {
             "type": "text",
-            "content": new_cell["content"] + f"{connector}{code}",
+            "content": new_cell["content"] + code,
         }
       if original_cell.get("type") == "math":
         if next_cell.get("type") == "paragraph":
-          if original_cell["env"] == "$":
-            connector = " "
-          else:
-            connector = "\n"
           return {
               "type": "text",
-              "content": new_cell["content"] + connector + next_cell["content"]
+              "content": new_cell["content"] + "\n" + next_cell["content"]
           }
       return None
 
@@ -782,7 +773,7 @@ class DocumentManager(object):
     """
     for cell in cells:
       for code, content in code_dictionary.items():
-        cell["content"] = cell["content"].replace(code, content)
+        cell["content"] = cell["content"].replace(code, "\n"+content)
 
     """
     Merge
