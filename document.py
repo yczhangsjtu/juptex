@@ -30,7 +30,7 @@ class DocumentManager(object):
     self._date = None
     self._title = ""
     self._outline_each_section = False
-    self.define("mm", self._text_manager._math_manager)
+    self.define("mm", self.get_mm())
 
   def anonymous(self):
     self._anonymous = True
@@ -56,6 +56,9 @@ class DocumentManager(object):
 
   def common_definitions_for_crypto(self):
     self._text_manager.common_definitions_for_crypto()
+
+  def get_mm(self):
+    return self._text_manager._math_manager
 
   def add_meta(self, line):
     self._text_manager.add_meta(line)
@@ -514,7 +517,7 @@ class DocumentManager(object):
         ret.append({"type": "draw", "content": cell.get("content")})
         ret.append({"type": "endslide"})
       elif cell.get("type") in ["theorem", "lemma", "corollary",
-                                "remark", "definition"]:
+                                "remark", "definition", "proof"]:
         paragraphs = split_by_empty_lines(cell.get("lines"))
         ret.append({
             "type": "start_" + cell.get("type"),

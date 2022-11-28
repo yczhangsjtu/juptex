@@ -113,7 +113,7 @@ class ParagraphManager(object):
         else:
           ret.append(" " * indent + sentence)
       else:
-        assert i > 0  # The first item must be sentence
+        assert i > 0, f"Error in\n{colist}\nThe first item must be sentence"
         body = "\n".join([" " * indent + r"\item " +
                           "\n".join(self._dump_colist(list_item, indent + 2))
                           for list_item in item._items])
@@ -128,6 +128,9 @@ class Sentence(object):
   def __init__(self, content, indent_level):
     self._content = content
     self._indent_level = indent_level
+
+  def __str__(self):
+    return f"indent {self._indent_level}: {self._content}"
 
 
 class List(object):
@@ -149,6 +152,10 @@ class List(object):
     if self.empty():
       return None
     return self._items[-1]
+
+  def __str__(self):
+    return self._category + ": [" + "\n".join([
+        str(item) for item in self._items]) + "]"
 
 
 class CollectionListSentences(object):
@@ -176,6 +183,9 @@ class CollectionListSentences(object):
   def threshold(self):
     return 0
 
+  def __str__(self):
+    return "\n".join([str(item) for item in self._content])
+
 
 class ListItem(CollectionListSentences):
   def __init__(self, indent_threshold):
@@ -184,3 +194,6 @@ class ListItem(CollectionListSentences):
 
   def threshold(self):
     return self._indent_threshold
+
+  def __str__(self):
+    return "item: " + super().__str__()

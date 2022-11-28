@@ -7,6 +7,7 @@ from juptex.notebook import isnotebook, register_cell_magic, \
     register_line_magic
 from juptex.preview import genpng
 from juptex.utils import split_two_by_empty_line
+from juptex.author import Author
 
 
 global the_text_manager
@@ -19,8 +20,8 @@ if isnotebook():
     return the_text_manager._math_manager.view(content, '$')
 
   @register_cell_magic
-  def block_math(line, content, env):
-    return the_text_manager._math_manager.view(content, env)
+  def block_math(line, content):
+    return the_text_manager._math_manager.view(content, line.strip())
 
   @register_cell_magic
   def tikz(line, content):
