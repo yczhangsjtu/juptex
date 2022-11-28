@@ -323,11 +323,16 @@ class DocumentManager(object):
     start_line = lines[0].strip()
     if start_line.startswith("%%algorithm "):
       name = start_line[12:].strip()
+      is_wide = AlgorithmManager(self._text_manager).is_wide(
+          "\n".join(lines[1:]))
       self.define("alg_" + to_word(name),
-                  r"Algorithm~\ref{alg:" + to_label(name) + "}")
+                  r"Algorithm~\ref{alg:" + to_label(name) + "}"
+                  if not is_wide else
+                  r"Figure~\ref{fig:" + to_label(name) + "}")
       return {
           "type": "algorithm",
           "content": "\n".join(lines[1:]),
+          "name": name,
       }
     if start_line.startswith('%drawfile ') or start_line.startswith(
             '%drawfilegui ') or start_line.startswith(
@@ -697,7 +702,8 @@ class DocumentManager(object):
         content = FigureManager(
             text_manager=self._text_manager,
             image_path=target_path)(
-                cell.get("path"), title,
+                cell.get("path"),
+                self._text_manager(cell.get("title")),
                 "fig:" + to_label(cell.get("name")),
                 cell.get("wide", False))
         ret.append({
@@ -710,9 +716,16 @@ class DocumentManager(object):
             image_path=target_path)
         tabulars = tm.read(cell.get("path"))
         tabulars[0].get_row(0).set_header()
-        content = tm(tabulars, title,
+        content = tm(tabulars, cell.get("title"),
                      "tab:" + to_label(cell.get("name")),
                      cell.get("wide", False))
+        ret.append({
+            "belong": belong,
+            "content": content
+        })
+      elif cell.get("type") == "algorithm":
+        am = AlgorithmManager(text_manager=self._text_manager)
+        content = am(cell.get("content"), cell.get("name"))
         ret.append({
             "belong": belong,
             "content": content

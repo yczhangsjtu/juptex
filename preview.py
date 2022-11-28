@@ -41,6 +41,8 @@ def enclose_with_template(content, meta=None):
   has_reference = need_reference(content)
   no_standalone = has_reference or content.find("\\begin{multline") >= 0
   no_standalone = no_standalone or content.find("\\begin{figure*") >= 0
+  no_standalone = no_standalone or content.find("\\begin{algorithm") >= 0
+  wide = content.find("\\begin{figure*") >= 0
   has_tikz = content.find("\\begin{tikzpicture}") >= 0
   has_tikz = has_tikz or content.find("\\tikz") >= 0
   if no_standalone:
@@ -50,6 +52,7 @@ def enclose_with_template(content, meta=None):
   else:
     header = standalone_header
   temp = template.replace("<header>", header)
+  temp = temp.replace("<geometry>", wide_page if wide else "")
   temp = temp.replace("<tikz_code>", tikz_code if has_tikz else "")
   temp = temp.replace("<bibliography>", bibliography if has_reference else "")
   temp = temp.replace("<meta>", meta if meta is not None else "")
@@ -108,7 +111,18 @@ standalone_tikz_header = r"\documentclass[crop,tikz]{standalone}"
 general_header = r"\documentclass{article}"
 
 
+wide_page = r"""
+\usepackage{geometry}
+\geometry{
+ a4paper,
+ left=10mm,
+ right=10mm,
+}
+"""
+
+
 template = r"""<header>
+<geometry>
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}

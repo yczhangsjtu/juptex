@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 from juptex.errors import *
 from juptex.utils import *
+from juptex.preview import *
+from juptex.notebook import *
 from juptex.text import TextManager
 
 
@@ -32,6 +34,28 @@ class AlgorithmManager(object):
 
   def render_meta(self):
     return self._text_manager.render_meta()
+
+  def is_wide(self, content):
+    lines = content.split("\n")
+    line_info = []
+    for line in lines:
+      line_info.append(self._preprocess_line(line))
+    root = self._form_tree(line_info)
+    empty_count = 0
+    while root is not None:
+      tp = root["type"]
+      if tp == "title":
+        empty_count = 0
+      elif tp == "empty":
+        empty_count += 1
+      elif tp == "vspace":
+        empty_count = 0
+      else:
+        if empty_count >= 3:
+          return True
+        empty_count = 0
+      root = root["next"]
+    return False
 
   def __call__(self, content, name):
     lines = content.split("\n")
@@ -97,6 +121,13 @@ class AlgorithmManager(object):
           "\n\n".join([alg.render()
                        if isinstance(alg, AlgorithmicEditor) else alg
                        for alg in algorithmics]))
+
+  def view(self, content, name):
+    if isnotebook():
+      content = self(content, name)
+      return genpng(content, meta=self.render_meta())
+    else:
+      return None
 
   def _concatenate_all_child(self, node, include_next=False):
     if node is None:
