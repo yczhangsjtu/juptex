@@ -24,7 +24,8 @@ if isnotebook():
 
   @register_cell_magic
   def tikz(line, content):
-    return genpng("\\begin{tikzpicture}\n" + content + "\n\\end{tikzpicture}")
+    return genpng("\\begin{tikzpicture}\n" + content + "\n\\end{tikzpicture}",
+                  the_text_manager.render_meta())
 
   @register_cell_magic
   def tikzfig(line, content):
@@ -33,7 +34,8 @@ if isnotebook():
     return genpng("\\begin{figure}\\centering\\begin{tikzpicture}\n" +
                   "\n".join(content) + "\n\\end{tikzpicture}\n\\caption{" +
                   "\n".join(title) +
-                  "}\n\\end{figure}")
+                  "}\n\\end{figure}",
+                  the_text_manager.render_meta())
 
   @register_cell_magic
   def tikzfigwide(line, content):
@@ -42,7 +44,8 @@ if isnotebook():
     return genpng("\\begin{figure*}\\centering\\begin{tikzpicture}\n" +
                   "\n".join(content) + "\n\\end{tikzpicture}\n\\caption{" +
                   "\n".join(title) +
-                  "}\n\\end{figure*}")
+                  "}\n\\end{figure*}",
+                  the_text_manager.render_meta())
 
   @register_cell_magic
   def algorithm(line, content):
@@ -58,7 +61,7 @@ if isnotebook():
       content = json.load(f)
     di._picture = content["picture"]
     content = di.render()
-    return genpng(content)
+    return genpng(content, the_text_manager.render_meta())
 
   @register_line_magic
   def drawgui(line):
@@ -79,7 +82,8 @@ if isnotebook():
     content = di.render()
     return genpng("\\begin{figure}\\centering\n" +
                   content + "\n\\caption{" + title +
-                  "}\n\\end{figure}")
+                  "}\n\\end{figure}",
+                  the_text_manager.render_meta())
 
   @register_cell_magic
   def drawwide(line, content):
@@ -93,7 +97,8 @@ if isnotebook():
     content = di.render()
     return genpng("\\begin{figure*}\\centering\n" +
                   content + "\n\\caption{" + title +
-                  "}\n\\end{figure*}")
+                  "}\n\\end{figure*}",
+                  the_text_manager.render_meta())
 
   @register_cell_magic
   def drawfiggui(line, content):
