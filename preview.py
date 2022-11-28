@@ -4,6 +4,7 @@ from juptex.config import *
 
 
 def genpdf(content, meta=None, clean=False, postfix=""):
+  original_content = content
   content = enclose_with_template(content, meta)
   has_reference = need_reference(content)
   if not os.path.isdir("./view"):
@@ -28,6 +29,12 @@ def genpdf(content, meta=None, clean=False, postfix=""):
                     "> /dev/null 2> error.log")
   if ret != 0:
     print(f"Exit with error: {ret}")
+    with open("./view/view.log") as f:
+      message = f.read()
+      key_message_location = message.find("Emergency")
+      print(message[key_message_location:
+                    min(key_message_location+300, len(message))])
+      print(original_content)
     return False
 
   return True
@@ -40,7 +47,7 @@ def need_reference(content):
 def enclose_with_template(content, meta=None):
   has_reference = need_reference(content)
   no_standalone = has_reference or content.find("\\begin{multline") >= 0
-  no_standalone = no_standalone or content.find("\\begin{figure*") >= 0
+  no_standalone = no_standalone or content.find("\\begin{figure") >= 0
   no_standalone = no_standalone or content.find("\\begin{algorithm") >= 0
   wide = content.find("\\begin{figure*") >= 0
   has_tikz = content.find("\\begin{tikzpicture}") >= 0

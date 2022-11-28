@@ -673,7 +673,7 @@ class DocumentManager(object):
 \end{tikzpicture}""" % content
         env = "figure" if not cell.get("wide", False) else "figure*"
         if title is not None:
-          content = r"""\begin{%s}[ht]
+          content = r"""\begin{%s}[ht]\centering
 %s
 \caption{%s}\label{fig:%s}
 \end{%s}""" % (env, content,
@@ -695,7 +695,7 @@ class DocumentManager(object):
         content = di.render()
         env = "figure" if not cell.get("wide", False) else "figure*"
         if title is not None:
-          content = r"""\begin{%s}
+          content = r"""\begin{%s}[ht]\centering
 %s
 \caption{%s}\label{fig:%s}
 \end{%s}""" % (env, content,

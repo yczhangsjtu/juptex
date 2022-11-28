@@ -1,4 +1,5 @@
 import json
+import tkinter as tk
 from juptex.document import DocumentManager as Document
 from juptex.text import TextManager
 from juptex.algorithm import AlgorithmManager
@@ -61,15 +62,46 @@ if isnotebook():
 
   @register_line_magic
   def drawgui(line):
+    name = line.strip()
+    with open("data/" + name + ".json") as f:
+      content = f.read()
+    launch_draw_gui(content, "data/" + name + ".json")
+
+  @register_cell_magic
+  def drawfig(line, content):
     import english2tikz
+    title = content.strip()
     name = line.strip()
     di = english2tikz.DescribeIt()
     with open("data/" + name + ".json") as f:
-      content = f.read()
-    launch_draw_gui(content)
+      content = json.load(f)
+    di._picture = content["picture"]
+    content = di.render()
+    return genpng("\\begin{figure}\\centering\n" +
+                  content + "\n\\caption{" + title +
+                  "}\n\\end{figure}")
+
+  @register_cell_magic
+  def drawwide(line, content):
+    import english2tikz
+    title = content.strip()
+    name = line.strip()
+    di = english2tikz.DescribeIt()
+    with open("data/" + name + ".json") as f:
+      content = json.load(f)
+    di._picture = content["picture"]
+    content = di.render()
+    return genpng("\\begin{figure*}\\centering\n" +
+                  content + "\n\\caption{" + title +
+                  "}\n\\end{figure*}")
+
+  @register_cell_magic
+  def drawfiggui(line, content):
+    drawgui(line)
 
 
 def launch_draw_gui(content, filename=None):
+  import english2tikz
   screen_width, screen_height = 1200, 750
   data = json.loads(content)
   root = tk.Tk()
@@ -77,7 +109,7 @@ def launch_draw_gui(content, filename=None):
                      height=screen_height)
   canvas.pack()
 
-  editor = Editor(root, canvas, screen_width, screen_height)
+  editor = english2tikz.Editor(root, canvas, screen_width, screen_height)
   editor.load(data)
   editor.filename = filename
 
