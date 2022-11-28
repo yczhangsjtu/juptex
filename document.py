@@ -482,7 +482,7 @@ class DocumentManager(object):
       if started_environment is not None:
         if cell.get("type") not in ["text", "math"]:
           ret.append({"type": "end_" + started_environment})
-          started_environment = False
+          started_environment = None
       if cell.get("type") == "text":
         lines = cell["lines"]
         paragraphs = split_by_empty_lines(lines)
@@ -514,13 +514,18 @@ class DocumentManager(object):
         ret.append({"type": "endslide"})
       elif cell.get("type") in ["theorem", "lemma", "corollary",
                                 "remark", "definition"]:
+        paragraphs = split_by_empty_lines(cell.get("lines"))
         ret.append({
             "type": "start_" + cell.get("type"),
             "title": cell.get("title"),
             "label": cell.get("label"),
             "prefix": cell.get("prefix"),
-            "lines": cell.get("lines"),
         })
+        for paragraph in paragraphs:
+          ret.append({
+              "type": "paragraph",
+              "content": paragraph,
+          })
         started_environment = cell.get("type")
       else:
         ret.append(cell)
@@ -613,6 +618,7 @@ class DocumentManager(object):
     belong = "body"
     target_path = slide_path if is_slide else essay_path
     slide_started = False
+    started_environment = None
     for cell in cells:
       if cell.get("type") == "section":
         belong = "body"
@@ -635,6 +641,8 @@ class DocumentManager(object):
       elif cell.get("type") == "startslide":
         if slide_started:
           raise ValueError(f"Slide already started: processing cell: {cell}")
+        if started_environment:
+          raise ValueError("Cannot start a slide at middle of a theorem")
         slide_started = True
         title = cell.get("title")
         if title is not None:
@@ -648,6 +656,8 @@ class DocumentManager(object):
       elif cell.get("type") == "endslide":
         if not slide_started:
           raise ValueError(f"Slide not started yet: processing cell: {cell}")
+        if started_environment:
+          raise ValueError("Cannot end a slide at middle of a theorem")
         slide_started = False
         ret.append({
             "belong": belong,
@@ -728,22 +738,64 @@ class DocumentManager(object):
         })
       elif cell.get("type") == "empty":
         continue
+      elif cell.get("type").startswith("start_"):
+        if started_environment is not None:
+          raise ValueError("Theorem environment already started.")
+        started_environment = cell.get("type")[6:]
+        content = r"\begin{%s}" % started_environment
+        if cell.get("title") is not None:
+          content += f"[{cell.get('title')}]"
+        content += r"\label{%s:%s}" % (cell.get("prefix"), cell.get("label"))
+        ret.append({
+            "belong": belong,
+            "content": content,
+            "merge_next": True,
+        })
+      elif cell.get("type").startswith("end_"):
+        if started_environment is None:
+          raise ValueError("Theorem environment Not started.")
+        if started_environment != cell.get("type")[4:]:
+          raise ValueError("Different started environment.")
+        ret.append({
+            "belong": belong,
+            "content": r"\end{%s}" % started_environment
+        })
+        started_environment = None
       else:
         raise ValueError(f"Unknown cell {cell}")
 
     if slide_started:
       raise ValueError("Unended slide at the end of the document")
 
+    if started_environment is not None:
+      raise ValueError(f"Unended environment {started_environment}")
+
     cells = ret
 
     """
-    Finally, set the codes back.
+    Set the codes back.
     """
     for cell in cells:
       for code, content in code_dictionary.items():
         cell["content"] = cell["content"].replace(code, content)
 
-    return ret
+    """
+    Merge
+    """
+    def f(cell):
+      return cell
+
+    def g(new_cell, original_cell, next_cell):
+      if original_cell.get("merge_next", False):
+        return {
+            "belong": new_cell.get("belong"),
+            "content": new_cell["content"] + "\n" + next_cell["content"],
+        }
+      return None
+
+    cells = map_with_merge(cells, f, g)
+
+    return cells
 
   def post_process(self, cells, is_slide):
     abstract, body, appendix = [], [], []

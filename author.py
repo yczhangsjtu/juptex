@@ -122,6 +122,8 @@ class AuthorManager(object):
   \\email{{{self.merge_emails(self.get_emails(i))}}}"""
       institute_list.append(inst)
     institute_list = " \\and\n  ".join(institute_list)
+    if len(self._authors) == 0:
+      return r"\author{}\institute{}"
     return r"""\newcommand*\samethanks[1][\value{footnote}]{\footnotemark[#1]}
 \author{
   %s
@@ -131,6 +133,8 @@ class AuthorManager(object):
 }""" % (author_list, institute_list)
 
   def dump_acm(self):
+    if len(self._authors) == 0:
+      return r"\author{}"
     return "\n".join([
         "\n".join(author.dump_acm())
         for author in self._authors
