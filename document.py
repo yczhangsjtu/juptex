@@ -340,13 +340,14 @@ class DocumentManager(object):
           "content": "\n".join(lines[1:]),
           "name": name,
       }
-    if start_line.startswith('%drawfile ') or start_line.startswith(
-            '%drawfilegui ') or start_line.startswith(
+    if start_line.startswith('%draw ') or start_line.startswith(
+            '%drawgui ') or start_line.startswith(
             '%%drawfig ') or start_line.startswith(
-            '%%drawfiggui ') or start_line.startswith("%%drawfigwide "):
+            '%%drawfiggui ') or start_line.startswith("%%drawwide "):
       filename = start_line[start_line.find(' ')+1:].strip()
       enclose_figure = start_line.startswith('%%drawfig')
-      title = lines[1:] if enclose_figure else None
+      enclose_figure = enclose_figure or start_line.startswith("%%drawwide")
+      title = "\n".join(lines[1:]) if enclose_figure else None
       if enclose_figure:
         self.define("fig_" + to_word(filename),
                     r"Figure~\ref{fig:" + to_label(filename) + "}")
@@ -356,8 +357,8 @@ class DocumentManager(object):
           "type": "draw",
           "content": content,
           "name": filename,
-          "title": "\n".join(title),
-          "wide": start_line.startswith("%%drawfigwide ")
+          "title": title,
+          "wide": start_line.startswith("%%drawwide ")
       }
     if start_line.startswith('%drawslide ') or start_line.startswith(
             '%drawslidegui '):
@@ -684,7 +685,7 @@ class DocumentManager(object):
         })
       elif cell.get("type") == "draw":
         title = cell.get("title")
-        content = cell.get("content")
+        content = json.loads(cell.get("content"))
         import english2tikz
         di = english2tikz.DescribeIt()
         di._picture = content["picture"]
