@@ -31,6 +31,15 @@ class TextManager(object):
       raise MathEquationError(
           f"Error in compiling math code:\n{code}\nError: {e}")
 
+  def add_meta(self, line):
+    self._math_manager.add_meta(line)
+
+  def define_latex(self, command, content):
+    self._math_manager.define_latex(command, content)
+
+  def render_meta(self):
+    return self._math_manager.render_meta()
+
   def __call__(self, content):
     content = content.replace(space_placeholder, " ")
 

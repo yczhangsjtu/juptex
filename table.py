@@ -352,6 +352,15 @@ class TableManager(object):
   def common_definitions_for_crypto(self):
     self._text_manager.common_definitions_for_crypto()
 
+  def add_meta(self, line):
+    self._text_manager.add_meta(line)
+
+  def define_latex(self, command, content):
+    self._text_manager.define_latex(command, content)
+
+  def render_meta(self):
+    return self._text_manager.render_meta()
+
   def wide(self):
     self._cross_columns = True
 

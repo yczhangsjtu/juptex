@@ -2,6 +2,8 @@ import string
 import re
 from juptex.config import *
 from juptex.errors import *
+from juptex.notebook import *
+from juptex.preview import *
 
 
 greek_letters = [
@@ -48,6 +50,7 @@ class MathManager(object):
     self._indent = math_indent
     self._locals = {}
     self._equation_name = None
+    self._meta = []
     self.common_definitions()
 
   def get(self, key):
@@ -59,6 +62,30 @@ class MathManager(object):
 
   def define(self, key, value):
     self._locals[key] = value
+
+  def add_meta(self, line):
+    self._meta.append(line)
+
+  def define_latex(self, command, content):
+    if command in ["vec", "emph"]:
+      name = "renewcommand"
+    else:
+      name = "newcommand"
+
+    if "#" not in content:
+      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
+      return
+    nargs = 0
+    for i in range(1, 10):
+      if f"#{i}" in content:
+        nargs = i
+    if nargs == 0:
+      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
+      return
+    self._meta.append(r"\%s{\%s}[%d]{%s}" % (name, command, nargs, content))
+
+  def render_meta(self):
+    return "\n".join(self._meta)
 
   def define_sf(self, content, alias=None):
     if alias is not None:
@@ -156,6 +183,19 @@ class MathManager(object):
 
   def __call__(self, content):
     return self.transpile(self.preprocess(self.parse(content)))
+
+  def view(self, content, env):
+    if isnotebook():
+      content = self(content)
+      if env == "$":
+        content = f"${content}$"
+      elif env == "\\[":
+        content = f"\\[{content}\\]"
+      else:
+        content = f"\\begin{{{env}}}\n{content}\n\\end{{{env}}}"
+      return genpng(content, meta=self.render_meta())
+    else:
+      return None
 
   def parse(self, content):
     lines = content.split("\n")

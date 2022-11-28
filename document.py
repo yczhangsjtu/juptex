@@ -28,7 +28,6 @@ class DocumentManager(object):
     self._anonymous = False
     self._date = None
     self._title = ""
-    self._meta = []
     self._outline_each_section = False
     self.define("mm", self._text_manager._math_manager)
 
@@ -44,27 +43,6 @@ class DocumentManager(object):
   def set_date(self, date=""):
     self._date = date
 
-  def add_meta(self, line):
-    self._meta.append(line)
-
-  def define_latex(self, command, content):
-    if command in ["vec", "emph"]:
-      name = "renewcommand"
-    else:
-      name = "newcommand"
-
-    if "#" not in content:
-      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
-      return
-    nargs = 0
-    for i in range(1, 10):
-      if f"#{i}" in content:
-        nargs = i
-    if nargs == 0:
-      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
-      return
-    self._meta.append(r"\%s{\%s}[%d]{%s}" % (name, command, nargs, content))
-
   def get(self, key):
     return self._locals[key]
 
@@ -77,6 +55,12 @@ class DocumentManager(object):
 
   def common_definitions_for_crypto(self):
     self._text_manager.common_definitions_for_crypto()
+
+  def add_meta(self, line):
+    self._text_manager.add_meta(line)
+
+  def define_latex(self, command, content):
+    self._text_manager.define_latex(command, content)
 
   def add_author(self, author):
     self._authors.add_author(author)
@@ -133,7 +117,7 @@ class DocumentManager(object):
     return r"\date{%s}" % self._date
 
   def _render_meta(self, is_slide):
-    ret = "\n".join(self._meta)
+    ret = self._text_manager.render_meta()
     if self._outline_each_section:
       ret += r"""
 \AtBeginSection[]
@@ -580,7 +564,7 @@ class DocumentManager(object):
     def g(new_cell, original_cell, next_cell):
       nonlocal code_count
       if new_cell.get("type") == "text" and next_cell.get("type") == "math":
-        content = self._text_manager._math_manager(next_cell["content"])
+        content = self._text_manager.compile_math(next_cell["content"])
         if next_cell["env"] == "$":
           content = f"${content}$"
         elif next_cell["env"] == r"\[":
