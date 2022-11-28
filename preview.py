@@ -114,9 +114,9 @@ general_header = r"\documentclass{article}"
 wide_page = r"""
 \usepackage{geometry}
 \geometry{
- a4paper,
- left=10mm,
- right=10mm,
+  a4paper,
+  left=10mm,
+  right=10mm,
 }
 """
 
