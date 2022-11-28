@@ -65,6 +65,18 @@ def split_by_empty_lines(lines):
   return ret
 
 
+def split_two_by_empty_line(lines):
+  left = []
+  right = []
+  target = left
+  for line in lines:
+    if line.strip() == "" and target == left:
+      target = right
+      continue
+    target.append(line)
+  return left, right
+
+
 def map_with_merge(lst, f, g):
   """
   Return a new list lst' with lst'[i] = f(lst[i])

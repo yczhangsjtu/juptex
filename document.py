@@ -374,7 +374,7 @@ class DocumentManager(object):
       }
     if start_line.startswith('%%tikzfig ') or \
        start_line.startswith('%%tikzfigwide '):
-      name = start_line[start_line.find(' ')+1].strip()
+      name = start_line[start_line.find(' ')+1:].strip()
       self.define("fig_" + to_word(name),
                   r"Figure~\ref{fig:" + to_label(name) + "}")
       empty_line = lines.index("")
@@ -656,12 +656,13 @@ class DocumentManager(object):
       elif cell.get("type") == "tikz":
         title = cell.get("title")
         content = cell.get("content")
+        content = r"""\begin{tikzpicture}
+%s
+\end{tikzpicture}""" % content
         env = "figure" if not cell.get("wide", False) else "figure*"
         if title is not None:
-          content = r"""\begin{%s}
-\begin{tikzpicture}
+          content = r"""\begin{%s}[ht]
 %s
-\end{tikzpicture}
 \caption{%s}\label{fig:%s}
 \end{%s}""" % (env, content,
                self._text_manager(cell.get("title")),

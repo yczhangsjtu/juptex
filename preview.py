@@ -40,6 +40,7 @@ def need_reference(content):
 def enclose_with_template(content, meta=None):
   has_reference = need_reference(content)
   no_standalone = has_reference or content.find("\\begin{multline") >= 0
+  no_standalone = no_standalone or content.find("\\begin{figure*") >= 0
   has_tikz = content.find("\\begin{tikzpicture}") >= 0
   has_tikz = has_tikz or content.find("\\tikz") >= 0
   if no_standalone:
