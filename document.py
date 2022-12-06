@@ -80,12 +80,12 @@ class DocumentManager(object):
     processed_cells = self.process_cells(preprocessed_cells, is_slide)
     compiled_cells = self.compile_cells(processed_cells, is_slide)
     abstract, body, appendix = self.post_process(compiled_cells, is_slide)
+    self.copy_template(template)
     reference = Reference()
     reference.extract_citations(abstract)
     reference.extract_citations(body)
     reference.extract_citations(appendix)
     reference.dump(os.path.join(target_path, self._name, "reference.bib"))
-    self.copy_template(template)
     if len(abstract) > 0:
       with open(os.path.join(target_path, self._name, "abstract.tex"),
                 "w") as f:

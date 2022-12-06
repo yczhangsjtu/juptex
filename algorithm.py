@@ -170,7 +170,8 @@ class AlgorithmManager(object):
     elif tp == "func":
       func_name, args = node["content"]
       assert node["child"] is not None
-      with algorithmic.procedure(func_name, args):
+      with algorithmic.procedure(self._text_manager(func_name),
+                                 self._text_manager(args)):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "if":
       assert node["child"] is not None

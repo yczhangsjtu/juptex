@@ -1,4 +1,5 @@
 import json
+import os
 import tkinter as tk
 from juptex.document import DocumentManager as Document
 from juptex.text import TextManager
@@ -67,9 +68,13 @@ if isnotebook():
   @register_line_magic
   def drawgui(line):
     name = line.strip()
-    with open("data/" + name + ".json") as f:
+    filename = "data/" + name + ".json"
+    if not os.path.exists(filename):
+      with open(filename, "w") as f:
+        f.write("{}")
+    with open(filename) as f:
       content = f.read()
-    launch_draw_gui(content, "data/" + name + ".json")
+    launch_draw_gui(content, filename)
 
   @register_cell_magic
   def drawfig(line, content):
