@@ -748,8 +748,10 @@ class DocumentManager(object):
         started_environment = cell.get("type")[6:]
         content = r"\begin{%s}" % started_environment
         if cell.get("title") is not None:
-          content += f"[{cell.get('title')}]"
-        content += r"\label{%s:%s}" % (cell.get("prefix"), cell.get("label"))
+          content += f"[{self._text_manager(cell.get('title'))}]"
+        if cell.get("label") is not None:
+          content += r"\label{%s:%s}" % (cell.get("prefix"),
+                                         cell.get("label"))
         ret.append({
             "belong": belong,
             "content": content,
