@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import subprocess
 from pybtex.database import parse_file, BibliographyData
 from pathlib import Path
 from juptex.config import *
@@ -108,7 +109,22 @@ class DocumentManager(object):
     content = content.replace("<meta>", self._render_meta(is_slide))
     with open(os.path.join(target_path, self._name, "main.tex"), "w") as f:
       f.write(content)
+  
+  def compile(self, template="lncs"):
+    is_slide = template == "beamer"
+    target_path = slide_path if is_slide else essay_path
+    compile = subprocess.Popen(["latexmk", "-pdfxe",
+                      "-interaction=nonstopmode", "main.tex"],
+                     cwd=os.path.join(target_path, self._name),
+                     stdout=subprocess.PIPE)
+    grep = subprocess.Popen(["grep", "-A 10", "-e", r'^\!.*$'], stdin=compile.stdout)
 
+  def open(self, template="lncs"):
+    is_slide = template == "beamer"
+    target_path = slide_path if is_slide else essay_path
+    subprocess.Popen(["open",
+                      os.path.join(target_path, self._name, "main.pdf")])
+    
   def _render_author(self, template):
     if self._anonymous:
       return r"\author{}"
