@@ -95,3 +95,23 @@ def map_with_merge(lst, f, g):
       else:
         ret.append(f(lst[i]))
   return ret
+
+
+def count_slashes(s, index):
+  count = 0
+  while index >= 0 and s[index] == '\\':
+    index -= 1
+    count += 1
+  return count
+
+
+def find_first_unescaped_quote(s):
+  index = s.find('"')
+  while index > 0:
+    if s[index-1] != '\\':
+      return index
+    number_of_slashes = count_slashes(s, index-1)
+    if number_of_slashes % 2 == 0:
+      return index
+    index = s.find('"', index+1)
+  return index

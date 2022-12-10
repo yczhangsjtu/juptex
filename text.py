@@ -1,6 +1,7 @@
 from juptex.config import *
 from juptex.errors import *
 from juptex.matheq import MathManager
+from juptex.utils import *
 
 
 class TextManager(object):
@@ -62,7 +63,7 @@ class TextManager(object):
         emph_index = content.find(emph_start_mark)
         cite_index = content.find(cite_start_mark)
         pre_index = content.find(pre_start_mark)
-        double_quote_index = content.find('"')
+        double_quote_index = find_first_unescaped_quote(content)
         python_index = content.find(python_start_mark)
 
         indices = [blockmath_index, math_index, bold_index, emph_index,
