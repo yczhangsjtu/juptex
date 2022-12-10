@@ -57,7 +57,7 @@ if isnotebook():
   @register_line_magic
   def draw(line):
     import english2tikz
-    name = line.strip()
+    name = line.strip().split(' ')[0]
     di = english2tikz.DescribeIt()
     with open("data/" + name + ".json") as f:
       content = json.load(f)
@@ -67,7 +67,7 @@ if isnotebook():
 
   @register_line_magic
   def drawgui(line):
-    name = line.strip()
+    name = line.strip().split(' ')[0]
     filename = "data/" + name + ".json"
     if not os.path.exists(filename):
       with open(filename, "w") as f:

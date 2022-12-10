@@ -262,6 +262,16 @@ class DocumentManager(object):
       return self._preprocess_section_title(line)
     elif line == "---":
       return {"type": "endslide"}
+    elif line == "> ---":
+      return {"type": "endslide", "optional": True}
+    elif line.startswith("> Slide: "):
+      title = line[9:]
+      return {
+          "type": "slide",
+          "lines": [],
+          "title": title,
+          "optional": True,
+      }
     else:
       return None
 
@@ -366,6 +376,11 @@ class DocumentManager(object):
             '%%drawfig ') or start_line.startswith(
             '%%drawfiggui ') or start_line.startswith("%%drawwide "):
       filename = start_line[start_line.find(' ')+1:].strip()
+      if start_line.startswith('%draw') and filename.find(' ') >= 0:
+        slide_title = filename[filename.find(' ') + 1:]
+        filename = filename[:filename.find(' ')]
+      else:
+        slide_title = None
       enclose_figure = start_line.startswith('%%drawfig')
       enclose_figure = enclose_figure or start_line.startswith("%%drawwide")
       title = "\n".join(lines[1:]) if enclose_figure else None
@@ -379,6 +394,7 @@ class DocumentManager(object):
           "content": content,
           "name": filename,
           "title": title,
+          "slidetitle": slide_title,
           "wide": start_line.startswith("%%drawwide ")
       }
     if start_line.startswith('%drawslide ') or start_line.startswith(
@@ -515,13 +531,20 @@ class DocumentManager(object):
           })
       elif cell.get("type") == "slide":
         lines = cell["lines"]
-        paragraphs = split_by_empty_lines(lines)
-        ret.append({"type": "startslide", "title": cell.get("title")})
+        paragraphs = split_by_empty_lines(lines) if len(lines) > 0 else []
+        if not cell.get("optional", False) or is_slide:
+          ret.append({
+            "type": "startslide",
+            "title": cell.get("title")
+          })
         for paragraph in paragraphs:
           ret.append({
               "type": "paragraph",
               "content": paragraph,
           })
+      elif cell.get("type") == "endslide":
+        if not cell.get("optional", False) or is_slide:
+          ret.append({"type": "endslide"})
       elif cell.get("type") == "tikzslide" or (
               is_slide and cell.get("type") == "tikz"
               and cell.get("title") is not None):
@@ -532,6 +555,11 @@ class DocumentManager(object):
               is_slide and cell.get("type") == "draw"
               and cell.get("title") is not None):
         ret.append({"type": "startslide", "title": cell.get("title")})
+        ret.append({"type": "draw", "content": cell.get("content")})
+        ret.append({"type": "endslide"})
+      elif cell.get("type") == "draw" and (
+              is_slide and cell.get("slidetitle") is not None):
+        ret.append({"type": "startslide", "title": cell.get("slidetitle")})
         ret.append({"type": "draw", "content": cell.get("content")})
         ret.append({"type": "endslide"})
       elif cell.get("type") in ["theorem", "lemma", "corollary",
@@ -592,11 +620,29 @@ class DocumentManager(object):
         new_cell = {**cell}
         new_cell["type"] = "text"
         return new_cell
+      elif cell.get("type") == "math":
+        content = self._text_manager.compile_math(cell["content"])
+        if cell["env"] == "$":
+          content = f"${content}$"
+        elif cell["env"] == r"\[":
+          content = f"\\[{content}\\]"
+        else:
+          content = r"""\begin{%s}
+  %s
+\end{%s}""" % (cell["env"], content, cell["env"])
+        nonlocal code_count
+        code = f"mathequationcode{code_count}"
+        code_count += 1
+        code_dictionary[code] = content
+        return {
+            "type": "text",
+            "content": code,
+        }
       return cell
 
     def g(new_cell, original_cell, next_cell):
       nonlocal code_count
-      if new_cell.get("type") == "text" and next_cell.get("type") == "math":
+      if next_cell.get("type") == "math":
         content = self._text_manager.compile_math(next_cell["content"])
         if next_cell["env"] == "$":
           content = f"${content}$"
@@ -606,20 +652,23 @@ class DocumentManager(object):
           content = r"""\begin{%s}
   %s
 \end{%s}""" % (next_cell["env"], content, next_cell["env"])
-        code = f"mathequationcode{code_count}"
-        code_count += 1
-        code_dictionary[code] = content
 
-        return {
-            "type": "text",
-            "content": new_cell["content"] + code,
-        }
+        if new_cell.get("type") == "text":
+          code = f"mathequationcode{code_count}"
+          code_count += 1
+          code_dictionary[code] = content
+          return {
+              "type": "text",
+              "content": new_cell["content"] + code,
+          }
+      
       if original_cell.get("type") == "math":
         if next_cell.get("type") == "paragraph":
           return {
               "type": "text",
               "content": new_cell["content"] + "\n" + next_cell["content"]
           }
+
       return None
 
     cells = map_with_merge(cells, f, g)
@@ -722,6 +771,10 @@ class DocumentManager(object):
 \end{%s}""" % (env, content,
                self._text_manager(cell.get("title")),
                to_label(cell.get("name")), env)
+        else:
+          content = r"""\begin{center}
+%s
+\end{center}""" % content
         ret.append({
             "belong": belong,
             "content": content
