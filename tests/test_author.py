@@ -5,11 +5,17 @@ from juptex.author import *
 class TestAuthor(unittest.TestCase):
   def test_compile(self):
     alice = Author("Alice", "alice@gmail.com")
-    alice.add_institute("Alice Inc.")
+    alice.add_institute(
+      Institute("Alice Inc.", country="Human")
+    )
 
     bob = Author("Bob", "bob@bob.edu.cn")
-    bob.add_institute("Bob University")
-    bob.add_institute("Bob College")
+    bob.add_institute(
+      Institute("Bob University", country="Virtual")
+    )
+    bob.add_institute(
+      Institute("Bob College", country="Human")
+    )
 
     am = AuthorManager()
     am.add_author(alice)
@@ -29,11 +35,20 @@ class TestAuthor(unittest.TestCase):
 }""")
 
     self.assertEqual(am.dump_acm(), r"""\author{Alice}
-\affiliation{Alice Inc.}
+\affiliation{
+  \institution{Alice Inc.}
+  \country{Human}
+}
 \email{alice@gmail.com}
 \author{Bob}
-\affiliation{Bob University}
-\affiliation{Bob College}
+\affiliation{
+  \institution{Bob University}
+  \country{Virtual}
+}
+\affiliation{
+  \institution{Bob College}
+  \country{Human}
+}
 \email{bob@bob.edu.cn}""")
 
     self.assertEqual(am.dump_blog(), r"""\author{Alice, Bob}""")

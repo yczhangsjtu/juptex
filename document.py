@@ -110,6 +110,8 @@ class DocumentManager(object):
       f.write(content)
 
   def _render_author(self, template):
+    if self._anonymous:
+      return r"\author{}"
     if template == "lncs":
       return self._authors.dump_lncs()
     if template == "acm":

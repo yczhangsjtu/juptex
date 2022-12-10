@@ -19,6 +19,8 @@ class Author(object):
     self._comment_reference = None
 
   def add_institute(self, institute):
+    if isinstance(institute, str):
+      institute = Institute(institute)
     self._institutes.append(institute)
 
   def set_comment(self, comment):
@@ -50,7 +52,7 @@ class Author(object):
       else:
         ret.append(f"\\authornotemark[{self._comment_reference+1}]")
     for institute in self._institutes:
-      ret.append(f"\\affiliation{{{institute}}}")
+      ret.append(institute.dump_acm())
     ret.append(f"\\email{{{self._email}}}")
     return ret
 
@@ -63,6 +65,14 @@ class AuthorManager(object):
     self._authors = []
     self._institutes = []
     self._footnotes = []
+  
+  def dump_anonymous(self, template):
+    if template == "lncs":
+      return r"\author{}\institute{}"
+    return r"\author{}"
+  
+  def dump(self, template):
+    return getattr(self, "dump_" + template)()
 
   def add_author(self, author):
     self._authors.append(author)
@@ -118,8 +128,10 @@ class AuthorManager(object):
     institute_list = []
     for i, inst in enumerate(self._institutes):
       if len(self.get_emails(i)) > 0:
-        inst = f"""{inst},\\\\
+        inst = f"""{inst.dump_lncs()},\\\\
   \\email{{{self.merge_emails(self.get_emails(i))}}}"""
+      else:
+        inst = inst.dump_lncs()
       institute_list.append(inst)
     institute_list = " \\and\n  ".join(institute_list)
     if len(self._authors) == 0:
@@ -143,3 +155,32 @@ class AuthorManager(object):
   def dump_blog(self):
     return r"\author{%s}" % ", ".join([
         author.dump_blog() for author in self._authors])
+
+
+class Institute(object):
+  def __init__(self, name, city=None, state=None, country=None):
+    self._name = name
+    self._city = city
+    self._state = state
+    self._country = country
+  
+  def dump(self, template):
+    return getattr(self, "blog_" + template)()
+  
+  def dump_lncs(self):
+    return self._name
+  
+  def dump_acm(self):
+    ret = [r"\institution{%s}" % self._name]
+    if self._city is not None:
+      ret.append(r"\city{%s}" % self._city)
+    if self._state is not None:
+      ret.append(r"\state{%s}" % self._state)
+    if self._country is not None:
+      ret.append(r"\country{%s}" % self._country)
+    else:
+      raise Exception("Country not provided for acm")
+    return "\\affiliation{\n  %s\n}" % "\n  ".join(ret)
+  
+  def dump_blog(self):
+    return self._name

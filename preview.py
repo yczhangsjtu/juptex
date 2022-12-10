@@ -31,7 +31,7 @@ def genpdf(content, meta=None, clean=False, postfix=""):
     print(f"Exit with error: {ret}")
     with open("./view/view.log") as f:
       message = f.read()
-      key_message_location = message.find("Emergency")
+      key_message_location = max(message.find("Emergency")-100, 0)
       print(message[key_message_location:
                     min(key_message_location+300, len(message))])
       print(original_content)

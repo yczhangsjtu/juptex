@@ -8,7 +8,7 @@ from juptex.notebook import isnotebook, register_cell_magic, \
     register_line_magic
 from juptex.preview import genpng
 from juptex.utils import split_two_by_empty_line
-from juptex.author import Author
+from juptex.author import Author, Institute
 
 
 global the_text_manager
