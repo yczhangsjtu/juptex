@@ -115,3 +115,23 @@ def find_first_unescaped_quote(s):
       return index
     index = s.find('"', index+1)
   return index
+
+
+special_chars = ['=', '#', '-', '_', '+', '*', '$',
+                 '@', '&', '!', '|', '[', '{', '}', ']',
+                 ':', ';']
+
+def find_special_char_not_in(s):
+  for c in special_chars:
+    if c not in s:
+      return c
+  return None
+
+
+def contains_verb(s):
+  for c in special_chars:
+    if s.find(r'\verb' + c) >= 0:
+      return True
+  if s.find(r'\begin{verbatim}'):
+    return True
+  return False

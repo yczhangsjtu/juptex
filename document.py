@@ -145,7 +145,7 @@ class DocumentManager(object):
 
   def _render_meta(self, is_slide):
     ret = self._text_manager.render_meta()
-    if self._outline_each_section:
+    if self._outline_each_section and is_slide:
       ret += r"""
 \AtBeginSection[]
 {
@@ -209,9 +209,21 @@ class DocumentManager(object):
 
     if start_line == "---":
       if lines[1].startswith("#### "):
-        title = lines[1][5:]
+        title = lines[1][5:].strip()
       else:
         title = None
+      if title == "Q&A":
+        return {
+            "type": "slide",
+            "lines": [r"\Huge\centering Q\&A"],
+            "title": "",
+        }
+      if title == "Outline":
+        return {
+            "type": "slide",
+            "lines": [r"\tableofcontents"],
+            "title": title,
+        }
       ret_lines = []
       for i in range(2, len(lines)):
         line, comments = extract_html_comment(lines[i])
@@ -513,7 +525,7 @@ class DocumentManager(object):
     First pass:
     1. split text into paragraphs
     2. mark by slides
-    2. mark by theorems
+    3. mark by theorems
     """
     started_environment = None
     for cell in cells:
@@ -581,25 +593,30 @@ class DocumentManager(object):
         ret.append(cell)
     """
     Second pass: filter out slide or non-slide contents
+    and mark slides as fragile if it contains verb
     """
     cells, ret = ret, []
-    slide_started = False
+    slide_started = None
     for cell in cells:
       if is_slide:
         if cell.get("type") in ["section", "subsection", "startslide"]:
           ret.append(cell)
           if cell.get("type") == "startslide":
-            slide_started = True
-        elif slide_started:
+            slide_started = cell
+        elif slide_started is not None:
           ret.append(cell)
           if cell.get("type") == "endslide":
-            slide_started = False
+            slide_started = None
+          elif cell.get("type") == "paragraph":
+            for line in cell.get("content"):
+              if contains_verb(line):
+                slide_started["fragile"] = True
       else:
         if cell.get("type") == "endslide":
-          slide_started = False
+          slide_started = None
         elif cell.get("type") == "startslide":
-          slide_started = True
-        elif not slide_started:
+          slide_started = cell
+        elif slide_started is None:
           ret.append(cell)
     return ret
 
@@ -707,10 +724,10 @@ class DocumentManager(object):
           raise ValueError("Cannot start a slide at middle of a theorem")
         slide_started = True
         title = cell.get("title")
+        fragile = cell.get("fragile") is not None
+        content = r"\begin{frame}[fragile]" if fragile else r"\begin{frame}"
         if title is not None:
-          content = r"\begin{frame}\frametitle{%s}" % title
-        else:
-          content = r"\begin{frame}"
+          content += r"\frametitle{%s}" % title
         ret.append({
             "belong": belong,
             "content": content,
@@ -761,7 +778,7 @@ class DocumentManager(object):
         di._picture = content["picture"]
         if "width" in content and "height" in content:
           width, height = content["width"], content["height"]
-          di._scale = min(1, 11/width, 8/height)
+          di._scale = min(1, 11/width, 7/height)
         content = di.render()
         env = "figure" if not cell.get("wide", False) else "figure*"
         if title is not None:

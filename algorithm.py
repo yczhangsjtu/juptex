@@ -93,6 +93,8 @@ class AlgorithmManager(object):
 
     if title is None:
       raise ValueError("No title")
+    
+    title = self._text_manager(title)
     if len(right_algorithmics) > 0:
       return r"""\begin{figure*}[ht!]
 \fbox{

@@ -19,8 +19,10 @@ blockmath_start_mark, blockmath_end_mark = "$$", "$$"
 math_start_mark, math_end_mark = "$", "$"
 bold_start_mark, bold_end_mark = "**", "**"
 emph_start_mark, emph_end_mark = "_", "_"
+underline_start_mark, underline_end_mark = "<u>", "</u>"
 cite_start_mark, cite_end_mark = "[[", "]]"
-pre_start_mark, pre_end_mark = "<raw>", "</raw>"
+raw_start_mark, raw_end_mark = "<raw>", "</raw>"
+pre_start_mark, pre_end_mark = "<code>", "</code>"
 space_placeholder = "<space>"
 bib_path = os.path.join(root_path, "reference.bib")
 

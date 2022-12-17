@@ -42,118 +42,182 @@ class TextManager(object):
     return self._math_manager.render_meta()
 
   def __call__(self, content):
+    transpilers = [
+      BlockMathTranspiler(self._math_manager),
+      MathTranspiler(self._math_manager),
+      BoldTranspiler(),
+      EmphTranspiler(),
+      UnderlineTranspiler(),
+      CiteTranspiler(),
+      RawTranspiler(),
+      PreTranspiler(),
+      DquoteTranspiler(),
+      PythonTranspiler(self._locals),
+    ]
     content = content.replace(space_placeholder, " ")
-
-    mode = "normal"
-    buffer = []
-    double_quote_is_open = False
-
-    """
-    Put the passed variables into the local variables
-    """
-    if self._locals is not None:
-      for key, value in self._locals.items():
-        locals()[key] = value
-
+    buffer, past = [], ""
     while len(content) > 0:
-      if mode == "normal":
-        blockmath_index = content.find(blockmath_start_mark)
-        math_index = content.find(math_start_mark)
-        bold_index = content.find(bold_start_mark)
-        emph_index = content.find(emph_start_mark)
-        cite_index = content.find(cite_start_mark)
-        pre_index = content.find(pre_start_mark)
-        double_quote_index = find_first_unescaped_quote(content)
-        python_index = content.find(python_start_mark)
-
-        indices = [blockmath_index, math_index, bold_index, emph_index,
-                   cite_index, pre_index, double_quote_index, python_index]
-        modes = ["blockmath", "math", "bold", "emph", "cite",
-                 "pre", "dquote", "python"]
-        start_mark_lengths = [
-            len(blockmath_start_mark), len(math_start_mark),
-            len(bold_start_mark), len(emph_start_mark),
-            len(cite_start_mark), len(pre_start_mark),
-            len('"'), len(python_start_mark)]
-
-        valid_indices = [(index, i)
-                         for i, index in enumerate(indices)
-                         if index != -1]
-        if len(valid_indices) == 0:
-          buffer.append(content)
-          break
-
-        index, i = min(valid_indices)
-        buffer.append(content[:index])
-        content = content[index+start_mark_lengths[i]:]
-        mode = modes[i]
-      elif mode == "python":
-        index = content.find(python_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find python end mark "
-                          f"when processing {content}")
-        buffer.append(str(eval(content[:index], globals(), locals())))
-        content = content[index+len(python_end_mark):]
-        mode = "normal"
-      elif mode == "blockmath":
-        index = content.find(blockmath_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find block math end mark "
-                          f"when processing {content}")
-        math_content = content[:index]
-        content = content[index+len(blockmath_end_mark):]
-        buffer.append(r"\[%s\]" % self.compile_math(math_content))
-        mode = "normal"
-      elif mode == "math":
-        index = content.find(math_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find math end mark "
-                          f"when processing {content}")
-        math_content = content[:index]
-        content = content[index+len(math_end_mark):]
-        buffer.append("$%s$" % self.compile_math(math_content))
-        mode = "normal"
-      elif mode == "bold":
-        index = content.find(bold_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find bold end mark "
-                          f"when processing {content}")
-        buffer.append("\\textbf{%s}" % content[:index])
-        content = content[index+len(bold_end_mark):]
-        mode = "normal"
-      elif mode == "emph":
-        index = content.find(emph_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find emph end mark "
-                          f"when processing {content}")
-        buffer.append("\\emph{%s}" % content[:index])
-        content = content[index+len(emph_end_mark):]
-        mode = "normal"
-      elif mode == "cite":
-        index = content.find(cite_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find cite end mark "
-                          f"when processing {content}")
-        buffer.append("\\cite{%s}" % content[:index])
-        content = content[index+len(cite_end_mark):]
-        mode = "normal"
-      elif mode == "pre":
-        index = content.find(pre_end_mark)
-        if index == -1:
-          raise Exception(f"Failed to find pre end mark "
-                          f"when processing {content}")
-        buffer.append(content[:index])
-        content = content[index+len(pre_end_mark):]
-        mode = "normal"
-      elif mode == "dquote":
-        if double_quote_is_open:
-          buffer.append("''")
-        else:
-          buffer.append("``")
-        double_quote_is_open = not double_quote_is_open
-        mode = "normal"
-      else:
-        assert False
+      transpiler, start, end = None, None, None
+      for t in transpilers:
+        s, e = t.find(content)
+        if s is not None and (start is None or s < start):
+          transpiler, start, end = t, s, e
+      if transpiler is None:
+        buffer.append(content)
+        content = ""
+        break
+      if end is None:
+        info = (past+content)[max(start+len(past)-20,0):
+                              min(start+20,len(content)+len(past))]
+        raise ValueError(f"Unended {transpiler}: ... '{info}' ...")
+      buffer.append(content[:start])
+      buffer.append(transpiler.transpile(transpiler.trim(content[start:end])))
+      past += content[:end]
+      content = content[end:]
+      
     ret = "".join(buffer)
     ret = ret.replace(" \\cite{", "~\\cite{")
     return ret
+  
+
+class Transpiler(object):
+  def __init__(self,
+               start_mark=None,
+               end_mark=None,
+               prefix=None,
+               suffix=None):
+    self._start_mark = start_mark
+    self._end_mark = end_mark
+    self._prefix = prefix
+    self._suffix = suffix
+    
+  def find(self, s):
+    start = s.find(self._start_mark)
+    if start < 0:
+      return None, None
+    end = s.find(self._end_mark, start + len(self._start_mark))
+    if end < 0:
+      return start, None
+    return start, end + len(self._end_mark)
+  
+  def trim(self, s):
+    return s[len(self._start_mark):-len(self._end_mark)]
+  
+  def transpile(self, s):
+    return self._prefix + s + self._suffix
+  
+  def __str__(self):
+    return self._start_mark
+
+
+class MathTranspiler(Transpiler):
+  def __init__(self, math_manager):
+    super().__init__(math_start_mark, math_end_mark)
+    self._math_manager = math_manager
+  
+  def transpile(self, s):
+    try:
+      return f"${self._math_manager(s)}$"
+    except MathEquationError as e:
+      raise MathEquationError(
+          f"Error in compiling math code:\n{s}\nError: {e}")
+
+
+class BlockMathTranspiler(Transpiler):
+  def __init__(self, math_manager):
+    super().__init__(blockmath_start_mark, blockmath_end_mark)
+    self._math_manager = math_manager
+  
+  def transpile(self, s):
+    try:
+      return f"\[{self._math_manager(s)}\]"
+    except MathEquationError as e:
+      raise MathEquationError(
+          f"Error in compiling math code:\n{s}\nError: {e}")
+
+class BoldTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(bold_start_mark,
+                     bold_end_mark,
+                     r"\textbf{",
+                     r"}")
+    
+
+class EmphTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(emph_start_mark,
+                     emph_end_mark,
+                     r"\emph{",
+                     r"}")
+    
+
+class UnderlineTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(underline_start_mark,
+                     underline_end_mark,
+                     r"\underline{",
+                     r"}")
+    
+
+class CiteTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(cite_start_mark,
+                     cite_end_mark,
+                     r"\cite{",
+                     r"}")
+    
+
+class RawTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(raw_start_mark,
+                     raw_end_mark,
+                     r"", r"")
+    
+
+class PreTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(pre_start_mark,
+                     pre_end_mark,
+                     r"", r"")
+  
+  def transpile(self, s):
+    deliminator = find_special_char_not_in(s)
+    if deliminator is None:
+      raise ValueError(f"{s} contains all possible deliminators")
+    return r"\verb" + deliminator + s + deliminator
+    
+
+class DquoteTranspiler(Transpiler):
+  def __init__(self):
+    self._open = False
+  
+  def find(self, s):
+    index = find_first_unescaped_quote(s)
+    if index < 0:
+      return None, None
+    return index, index + 1
+  
+  def trim(self, s):
+    return s
+  
+  def transpile(self, s):
+    if not self._open:
+      self._open = True
+      return '``'
+    self._open = False
+    return "''"
+  
+  def __str__(self):
+    return "double quote"
+  
+
+class PythonTranspiler(Transpiler):
+  def __init__(self, vars):
+    super().__init__(python_start_mark, python_end_mark)
+    self._vars = vars
+  
+  def transpile(self, s):
+    if self._vars is not None:
+      for key, value in self._vars.items():
+        locals()[key] = value
+    return str(eval(s, globals(), locals()))

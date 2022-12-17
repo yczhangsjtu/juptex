@@ -64,7 +64,8 @@ class MathManager(object):
     self._locals[key] = value
 
   def add_meta(self, line):
-    self._meta.append(line)
+    if line not in self._meta:
+      self._meta.append(line)
 
   def define_latex(self, command, content):
     if command in ["vec", "emph"]:
@@ -73,16 +74,16 @@ class MathManager(object):
       name = "newcommand"
 
     if "#" not in content:
-      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
+      self.add_meta(r"\%s{\%s}{%s}" % (name, command, content))
       return
     nargs = 0
     for i in range(1, 10):
       if f"#{i}" in content:
         nargs = i
     if nargs == 0:
-      self._meta.append(r"\%s{\%s}{%s}" % (name, command, content))
+      self.add_meta(r"\%s{\%s}{%s}" % (name, command, content))
       return
-    self._meta.append(r"\%s{\%s}[%d]{%s}" % (name, command, nargs, content))
+    self.add_meta(r"\%s{\%s}[%d]{%s}" % (name, command, nargs, content))
 
   def render_meta(self):
     return "\n".join(self._meta)
@@ -145,6 +146,7 @@ class MathManager(object):
     for a in list(string.ascii_uppercase):
       self.define_rm(a, f"rm{a}")
       self.define_bb(a, f"bb{a}")
+      self.define_bf(a, f"bf{a}")
       self.define_cal(a, f"c{a}")
       self.define_sf(a, f"sf{a}")
       self.define_tt(a, f"tt{a}")
@@ -152,6 +154,7 @@ class MathManager(object):
     for a in list(string.ascii_lowercase):
       self.define_rm(a, f"rm_{a}")
       self.define_bb(a, f"bb_{a}")
+      self.define_bf(a, f"bf_{a}")
       self.define_cal(a, f"c_{a}")
       self.define_sf(a, f"sf_{a}")
       self.define_tt(a, f"tt_{a}")
@@ -162,6 +165,7 @@ class MathManager(object):
       self.define(g, "\\"+g)
       self.define_rm("\\"+g, f"rm{g}")
       self.define_bb("\\"+g, f"bb{g}")
+      self.define_bf("\\"+g, f"bf{g}")
       self.define_cal("\\"+g, f"cal{g}")
       self.define_sf("\\"+g, f"sf{g}")
       self.define_tt("\\"+g, f"tt{g}")
