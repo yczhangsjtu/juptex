@@ -23,7 +23,7 @@ Hello world, hello world, hello world.
 Hello "_world_", hello "wo\"rld", hello world.
 Hello [[world]], **hello world**, hello world.
 Hello <u>world</u> $\sfC$, hello \"world `test_var`, hello world.
-<hide>Hello world</hide>, "hello world", `2**5` hello world $$\bbAlpha$$.
+<span hidden>Hello world</span>, "hello world", `2**5` hello world $$\bbAlpha$$.
 """), r"""
 Hello ``\emph{world}'', hello ``wo\"rld'', hello world.
 Hello~\cite{world}, \textbf{hello world}, hello world.
