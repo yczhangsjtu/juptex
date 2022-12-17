@@ -29,6 +29,13 @@ f( ):=
         mm(r"\SubCirc_{\offline}"),
         r"\mathsf{SubCirc}_{\mathrm{offline}}"
     )
+    self.assertEqual(mm(r"""
+\definesf{test}
+\define{vec}{\boldsymbol{\mathsf{#1}}}
+\define{vtest}{\vec{\test}}
+\test
+"""), r"\mathsf{test}")
+    self.assertEqual(mm(r"\vtest"), r"\boldsymbol{\mathsf{\mathsf{test}}}")
 
 
 if __name__ == "__main__":

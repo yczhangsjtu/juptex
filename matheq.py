@@ -4,6 +4,7 @@ from juptex.config import *
 from juptex.errors import *
 from juptex.notebook import *
 from juptex.preview import *
+from juptex.utils import *
 
 
 greek_letters = [
@@ -52,6 +53,7 @@ class MathManager(object):
     self._equation_name = None
     self._meta = []
     self.common_definitions()
+    self.define_define_functions()
 
   def get(self, key):
     return self._locals[key]
@@ -78,7 +80,7 @@ class MathManager(object):
       return
     nargs = 0
     for i in range(1, 10):
-      if f"#{i}" in content:
+      if content.find(f"#{i}") >= 0:
         nargs = i
     if nargs == 0:
       self.add_meta(r"\%s{\%s}{%s}" % (name, command, content))
@@ -87,6 +89,30 @@ class MathManager(object):
 
   def render_meta(self):
     return "\n".join(self._meta)
+  
+  def define_define_function(self, name):
+    f = getattr(self, name)
+    def wrap(*args, **kwargs):
+      f(*args, **kwargs)
+      return ""
+    self.define(name.replace("_", ""), wrap)
+  
+  def define_define_functions(self):
+    self.define_define_function("define_sf")
+    self.define_define_function("define_cal")
+    self.define_define_function("define_bb")
+    self.define_define_function("define_bbm")
+    self.define_define_function("define_bf")
+    self.define_define_function("define_tt")
+    self.define_define_function("define_rm")
+    self.define_define_function("define_bd")
+    def define_func(key, value):
+      if "#" in value:
+        self.define(key, str_to_function(value))
+      else:
+        self.define(key, value)
+      return ""
+    self.define("define", define_func)
 
   def define_sf(self, content, alias=None):
     if alias is not None:

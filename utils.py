@@ -135,3 +135,18 @@ def contains_verb(s):
   if s.find(r'\begin{verbatim}'):
     return True
   return False
+
+
+def str_to_function(value):
+  nargs = 0
+  for i in range(1, 10):
+    if value.find(f"#{i}") >= 0:
+      nargs = i
+  def ret(*args):
+    if len(args) != nargs:
+      raise ValueError(f"Expected {nargs} arguments, got {len(args)}")
+    result = value
+    for i in reversed(range(1, nargs+1)):
+      result = result.replace(f"#{i}", args[i-1])
+    return result
+  return ret
