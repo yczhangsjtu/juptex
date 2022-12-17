@@ -4,6 +4,7 @@ from juptex.algorithm import *
 
 class TestAlgorithm(unittest.TestCase):
   def test_compile(self):
+    self.maxDiff = None
     am = AlgorithmManager()
     am.common_definitions_for_crypto()
     self.assertEqual(am(r"""
@@ -18,6 +19,7 @@ def EqualToEqual($[[\vec{a}]],[[\vec{b}]],[[\vec{c}]],[[\vec{d}]],T;\vec{a},\vec
     where $0/0$ is treated as $0$
   $\verifier$ checks
     $\vec{q}\circ\paren{\vec{a}-\vec{b}}=\vec{t}\circ(\vec{c}-\vec{d})$
+  return $\field$
 
 vspace: 0.3cm
 
@@ -65,7 +67,8 @@ def Range32($[[\vec{v}]];\vec{v}$):
 \Procedure{EqualToEqual}{$[[\vec{a}]],[[\vec{b}]],[[\vec{c}]],[[\vec{d}]],T;\vec{a},\vec{b},\vec{c},\vec{d}$}
   \State $\mathsf{I}$ submits $\vec{t}:=\vec{1}^T\|\vec{0}^{N-T}$;
   \State $\mathsf{P}$ submits $\vec{q}:=\left.\left(\frac{\vec{c}_{[i]}-\vec{d}_{[i]}}{\vec{a}_{[i]}-\vec{b}_{[i]}}\right)_{i=1}^T\right\|\vec{0}^{N-T}$ where $0/0$ is treated as $0$;
-  \State $\mathsf{V}$ checks $\vec{q}\circ\left(\vec{a}-\vec{b}\right)=\vec{t}\circ(\vec{c}-\vec{d})$.
+  \State $\mathsf{V}$ checks $\vec{q}\circ\left(\vec{a}-\vec{b}\right)=\vec{t}\circ(\vec{c}-\vec{d})$;
+  \State \Return $\mathbb{F}$.
 \EndProcedure
 \end{algorithmic}
 

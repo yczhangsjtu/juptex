@@ -177,11 +177,11 @@ class AlgorithmManager(object):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "if":
       assert node["child"] is not None
-      with algorithmic.if_cond(node["content"]):
+      with algorithmic.if_cond(self._text_manager(node["content"])):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "elif":
       assert node["child"] is not None
-      with algorithmic.else_if(node["content"]):
+      with algorithmic.else_if(self._text_manager(node["content"])):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "else":
       assert node["child"] is not None
@@ -189,12 +189,12 @@ class AlgorithmManager(object):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "for":
       assert node["child"] is not None
-      with algorithmic.for_loop(node["content"]):
+      with algorithmic.for_loop(self._text_manager(node["content"])):
         self._process_node(algorithmic, node["child"], include_next=True)
     elif tp == "continue":
       algorithmic.continue_loop()
     elif tp == "return":
-      algorithmic.func_return(node["content"])
+      algorithmic.func_return(self._text_manager(node["content"]))
     elif tp == "empty":
       pass
     else:
@@ -241,6 +241,10 @@ class AlgorithmManager(object):
       content = None
     elif content == "return":
       tp = "return"
+      content = None
+    elif content.startswith("return "):
+      tp = "return"
+      content = content[7:]
     elif content.startswith("\\if"):
       tp = "statement"
       content = content[1:]
