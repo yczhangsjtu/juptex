@@ -23,6 +23,7 @@ underline_start_mark, underline_end_mark = "<u>", "</u>"
 cite_start_mark, cite_end_mark = "[[", "]]"
 raw_start_mark, raw_end_mark = "<raw>", "</raw>"
 pre_start_mark, pre_end_mark = "<code>", "</code>"
+hide_start_mark, hide_end_mark = "<hide>", "</hide>"
 space_placeholder = "<space>"
 bib_path = os.path.join(root_path, "reference.bib")
 

@@ -48,6 +48,7 @@ class TextManager(object):
       BoldTranspiler(),
       EmphTranspiler(),
       UnderlineTranspiler(),
+      HideTranspiler(),
       CiteTranspiler(),
       RawTranspiler(),
       PreTranspiler(),
@@ -178,7 +179,7 @@ class PreTranspiler(Transpiler):
   def __init__(self):
     super().__init__(pre_start_mark,
                      pre_end_mark,
-                     r"", r"")
+                     "", "")
   
   def transpile(self, s):
     deliminator = find_special_char_not_in(s)
@@ -221,3 +222,11 @@ class PythonTranspiler(Transpiler):
       for key, value in self._vars.items():
         locals()[key] = value
     return str(eval(s, globals(), locals()))
+
+
+class HideTranspiler(Transpiler):
+  def __init__(self):
+    super().__init__(hide_start_mark, hide_end_mark, "", "")
+  
+  def transpile(self, s):
+    return ""
