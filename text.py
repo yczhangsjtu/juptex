@@ -69,8 +69,8 @@ class TextManager(object):
         break
       if end is None:
         info = (past+content)[max(start+len(past)-20,0):
-                              min(start+20,len(content)+len(past))]
-        raise ValueError(f"Unended {transpiler}: ... '{info}' ...")
+                              min(start+len(past)+20,len(content)+len(past))]
+        raise ValueError(f"Unended {transpiler}: ... '{info}' ...\nin\n{past+content}")
       buffer.append(content[:start])
       buffer.append(transpiler.transpile(transpiler.trim(content[start:end])))
       past += content[:end]

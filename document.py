@@ -633,6 +633,7 @@ class DocumentManager(object):
     code_count = 0
 
     def f(cell):
+      nonlocal code_dictionary
       if cell.get("type") == "paragraph":
         new_cell = {**cell}
         new_cell["type"] = "text"
@@ -648,8 +649,9 @@ class DocumentManager(object):
   %s
 \end{%s}""" % (cell["env"], content, cell["env"])
         nonlocal code_count
-        code = f"mathequationcode{code_count}"
+        code = f"mathequationcode{code_count}code"
         code_count += 1
+        assert code not in code_dictionary, f"code {code} already exists: {code_dictionary[code]}"
         code_dictionary[code] = content
         return {
             "type": "text",
@@ -658,7 +660,7 @@ class DocumentManager(object):
       return cell
 
     def g(new_cell, original_cell, next_cell):
-      nonlocal code_count
+      nonlocal code_count, code_dictionary
       if next_cell.get("type") == "math":
         content = self._text_manager.compile_math(next_cell["content"])
         if next_cell["env"] == "$":
@@ -671,8 +673,9 @@ class DocumentManager(object):
 \end{%s}""" % (next_cell["env"], content, next_cell["env"])
 
         if new_cell.get("type") == "text":
-          code = f"mathequationcode{code_count}"
+          code = f"mathequationcode{code_count}code"
           code_count += 1
+          assert code not in code_dictionary, f"code {code} already exists: {code_dictionary[code]}"
           code_dictionary[code] = content
           return {
               "type": "text",
