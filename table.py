@@ -2,6 +2,7 @@ import os
 from numbers_parser import Document, TextCell
 from juptex.config import *
 from juptex.text import TextManager
+from juptex.utils import *
 
 
 class Column(object):
