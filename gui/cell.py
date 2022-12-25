@@ -2,6 +2,9 @@ import pygame
 
 
 class Cell:
+    distance = 5
+    xshift = 30
+    yshift = 25
     def __init__(self, row, col, width, height):
         self.row = row
         self.col = col
@@ -11,25 +14,85 @@ class Cell:
         self.selected = False
         self.merged = False
         self.merge_group = []
+        self.top_border = False
+        self.left_border = False
+        self.right_border = False
+        self.bottom_border = False
+        self.xshift = Cell.xshift
+        self.yshift = Cell.yshift
+        self.selected_left_border = False
+        self.selected_right_border = False
+        self.selected_top_border = False
+        self.selected_bottom_border = False
+    
+    def get_rect(self):
+        return (self.col*(self.width + Cell.distance) + self.xshift,
+                self.row*(self.height + Cell.distance) + self.yshift,
+                self.width, self.height)
+    
+    def get_top_left(self):
+        x, y, w, h = self.get_rect()
+        return x, y
+    
+    def get_bottom_left(self):
+        x, y, w, h = self.get_rect()
+        return x, y + h
+    
+    def get_top_right(self):
+        x, y, w, h = self.get_rect()
+        return x + w, y
+    
+    def get_bottom_right(self):
+        x, y, w, h = self.get_rect()
+        return x + w, y + h
         
     def draw(self, screen, editing=False):
         # Draw the cell background
         pygame.draw.rect(screen,
                          (255, 255, 255) if editing and self.selected else (200, 200, 200),
-                         (self.col*self.width, self.row*self.height, self.width, self.height))
+                         self.get_rect())
         
+        # Draw the cell borders
+        if self.top_border or self.selected_top_border:
+            pygame.draw.rect(screen,
+                            (0, 0, 255) if self.selected_top_border else (0, 0, 0),
+                            (self.get_top_left()[0]-self.distance,
+                             self.get_top_left()[1]-self.distance,
+                             self.width+self.distance*2,
+                             self.distance))
+        if self.right_border or self.selected_right_border:
+            pygame.draw.rect(screen,
+                            (0, 0, 255) if self.selected_right_border else (0, 0, 0),
+                            (self.get_top_right()[0],
+                             self.get_top_right()[1]-self.distance,
+                             self.distance,
+                             self.height+self.distance*2))
+        if self.bottom_border or self.selected_bottom_border:
+            pygame.draw.rect(screen,
+                            (0, 0, 255) if self.selected_bottom_border else (0, 0, 0),
+                            (self.get_bottom_left()[0]-self.distance,
+                             self.get_bottom_left()[1],
+                             self.width+self.distance*2,
+                             self.distance))
+        if self.left_border or self.selected_left_border:
+            pygame.draw.rect(screen,
+                            (0, 0, 255) if self.selected_left_border else (0, 0, 0),
+                            (self.get_top_left()[0]-self.distance,
+                             self.get_top_left()[1]-self.distance,
+                             self.distance,
+                             self.height+self.distance*2))
+            
         # Draw the cell text
         font = pygame.font.Font(None, 20)
         text_surface = font.render(self.text, True, (0, 0, 0))
         text_rect = text_surface.get_rect()
-        text_rect.topleft = (self.col*self.width + 5, self.row*self.height + 5)  # Position the text at the top left corner
+        # Position the text at the top left corner
+        text_rect.topleft = self.get_top_left()[0] + 5, self.get_top_left()[1] + 5
         screen.blit(text_surface, text_rect)
         
         # Draw the cell border
         if self.selected:
-            pygame.draw.rect(screen, (255, 255, 0), (self.col*self.width, self.row*self.height, self.width, self.height), 1)
-        else:
-            pygame.draw.rect(screen, (0, 0, 0), (self.col*self.width, self.row*self.height, self.width, self.height), 1)
+            pygame.draw.rect(screen, (255, 0, 0), self.get_rect(), 3)
             
         # Draw the merge group border
         if self.merged:
@@ -44,13 +107,66 @@ class Cell:
                              1)
             
     def is_inside(self, x, y):
-        return self.col*self.width <= x < (self.col+1)*self.width and self.row*self.height <= y < (self.row+1)*self.height
+        x0, y0, w, h = self.get_rect()
+        return x0 <= x < x0 + w and y0 <= y < y0 + h
+            
+    def is_on_left_border(self, x, y):
+        x0, y0, w, h = self.get_rect()
+        return x0 - self.distance <= x < x0 and y0 - self.distance <= y < y0 + h + self.distance
+            
+    def is_on_right_border(self, x, y):
+        x0, y0, w, h = self.get_rect()
+        return x0 + w <= x < x0 + w + self.distance and y0 - self.distance <= y < y0 + h + self.distance
+            
+    def is_on_bottom_border(self, x, y):
+        x0, y0, w, h = self.get_rect()
+        return x0 - self.distance <= x < x0 + w + self.distance and y0 + h <= y < y0 + h + self.distance
+            
+    def is_on_top_border(self, x, y):
+        x0, y0, w, h = self.get_rect()
+        return x0 - self.distance <= x < x0 + w + self.distance and y0 - self.distance <= y < y0
     
     def set_selected(self):
         self.selected = True
     
     def unset_selected(self):
         self.selected = False
+    
+    def set_selected_left_border(self):
+        self.selected_left_border = True
+    
+    def toggle_selected_left_border(self):
+        self.selected_left_border = not self.selected_left_border
+    
+    def unset_selected_left_border(self):
+        self.selected_left_border = False
+    
+    def set_selected_right_border(self):
+        self.selected_right_border = True
+    
+    def toggle_selected_right_border(self):
+        self.selected_right_border = not self.selected_right_border
+    
+    def unset_selected_right_border(self):
+        self.selected_right_border = False
+    
+    def set_selected_top_border(self):
+        self.selected_top_border = True
+    
+    def toggle_selected_top_border(self):
+        self.selected_top_border = not self.selected_top_border
+    
+    def unset_selected_top_border(self):
+        self.selected_top_border = False
+    
+    def set_selected_bottom_border(self):
+        self.selected_bottom_border = True
+    
+    def toggle_selected_bottom_border(self):
+        self.selected_bottom_border = not self.selected_bottom_border
+    
+    def unset_selected_bottom_border(self):
+        self.selected_bottom_border = False
         
     def set_merged(self, merge_group):
         self.merged = True
