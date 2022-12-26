@@ -100,7 +100,7 @@ while running:
                         for row in table:
                             for cell in row:
                                 cell.unset_selected()
-                        table[added_row_index][selected_col].set_selected()
+                        selected_cells[0].set_selected()
                     elif pygame.key.get_mods() & pygame.KMOD_CTRL:
                         selected_row = selected_cells[0].row
                         selected_col = selected_cells[0].col
