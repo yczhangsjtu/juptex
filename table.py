@@ -1,5 +1,5 @@
 import os
-from numbers_parser import Document, TextCell
+from numbers_parser import Document, TextCell, NumberCell
 from juptex.config import *
 from juptex.text import TextManager
 from juptex.utils import *
@@ -324,6 +324,7 @@ class Table(object):
     return r"""\begin{%s}[ht]
 \caption{%s}
 \label{%s}
+\centering
 %s
 \end{%s}""" % (env_name,
                self._caption.dump(),
@@ -384,13 +385,15 @@ class TableManager(object):
           for j in range(n):
             if isinstance(data[i][j], TextCell):
               sentences.append(self._text_manager(data[i][j].value.strip()))
+            elif isinstance(data[i][j], NumberCell):
+              sentences.append("%g" % (data[i][j].value))
             else:
               sentences.append(None)
-          latex_table.add_row(
-              [item.value.strip() if item.value is not None
-               else None
-               for item in data[i]],
-              sentences)
+          row = [str(item.value).strip()
+                 if item.value is not None
+                 else None
+                 for item in data[i]]
+          latex_table.add_row(row, sentences)
           for j in range(n):
             if isinstance(data[i][j], TextCell):
               latex_table.get_row(i)._cells[j].row_span(data[i][j].size[0])
@@ -405,6 +408,7 @@ class TableManager(object):
     return r"""\begin{%s}[ht]
 \caption{%s}
 \label{%s}
+\centering
 %s
 \end{%s}""" % (env_name,
                self._text_manager(title),

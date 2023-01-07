@@ -465,7 +465,8 @@ class DocumentManager(object):
       content = "\n".join(lines[1:])
       labels = find_all_labels(content)
       for label in labels:
-        self.define(to_word(label), r"Equation~\ref{%s}" % label)
+        self.define(to_word(label)+"_full", r"Equation~(\ref{%s})" % label)
+        self.define(to_word(label), r"(\ref{%s})" % label)
       return {
           "type": "math",
           "content": content,
@@ -812,14 +813,13 @@ class DocumentManager(object):
             "content": content
         })
       elif cell.get("type") == "table":
-        tm = TableManager(
-            text_manager=self._text_manager,
-            image_path=target_path)
+        tm = TableManager(text_manager=self._text_manager)
         tabulars = tm.read(cell.get("path"))
         tabulars[0].get_row(0).set_header()
+        if cell.get("wide", False):
+          tm.wide()
         content = tm(tabulars, cell.get("title"),
-                     "tab:" + to_label(cell.get("name")),
-                     cell.get("wide", False))
+                     "tab:" + to_label(cell.get("name")))
         ret.append({
             "belong": belong,
             "content": content
