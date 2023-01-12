@@ -372,6 +372,10 @@ class MathManager(object):
           stack.pop()
           assert len(stack) > 0
           if command in self._locals:
+            """
+            This means a command does not receive any parameter.
+            In this case, this command must be mapped directly to string.
+            """
             stack[-1].append(str(self._locals[command]))
           else:
             stack[-1].append("\\" + command)

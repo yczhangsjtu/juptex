@@ -9,9 +9,9 @@ class TestMathEq(unittest.TestCase):
     mm.set_local_variables(locals())
     mm.define_sf("CompCirc")
     self.assertEqual(
-        mm(r"C\in\CompCirc,\vec{x}\in\ffv{\ell_1},\vec{y}\in\ffv{\ell_2}"),
+        mm(r"C\in\CompCirc,\vec{x}\in\ffv{\ell_1},\vec{y}\in\ffv{\ffv{2}}"),
         r"C\in\mathsf{CompCirc},\vec{x}\in\mathbb{F}^{\ell_1},"
-        r"\vec{y}\in\mathbb{F}^{\ell_2}"
+        r"\vec{y}\in\mathbb{F}^{\mathbb{F}^{2}}"
     )
     self.assertEqual(
         mm(r"""
