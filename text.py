@@ -43,6 +43,7 @@ class TextManager(object):
 
   def __call__(self, content):
     transpilers = [
+      MatheqTranspiler(self._math_manager),
       BlockMathTranspiler(self._math_manager),
       MathTranspiler(self._math_manager),
       BoldTranspiler(),
@@ -111,18 +112,44 @@ class Transpiler(object):
     return self._start_mark
 
 
-class MathTranspiler(Transpiler):
+class MatheqTranspiler(Transpiler):
   def __init__(self, math_manager):
-    super().__init__(math_start_mark, math_end_mark)
+    super().__init__()
     self._math_manager = math_manager
   
+  def find(self, s):
+    match = re.search(r"^```matheq", s, re.MULTILINE)
+    if not match:
+      return None, None
+    end_match = re.search(r"^```$", s[match.span()[1]:], re.MULTILINE)
+    if not end_match:
+      return match.span()[0], None
+    return match.span()[0], match.span()[1] + end_match.span()[1]
+  
+  def trim(self, s: str):
+    return s
+  
   def transpile(self, s):
+    assert s.startswith("```matheq")
+    assert s.endswith("\n```")
+    env = s[9:s.find("\n")].strip()
+    if env == "":
+      env = "inline"
+    s = s[s.find("\n"):-4].strip()
     try:
-      return f"${self._math_manager(s)}$"
+      s = self._math_manager(s)
     except MathEquationError as e:
       raise MathEquationError(
           f"Error in compiling math code:\n{s}\nError: {e}")
-
+    if env == "inline":
+      return f"${s}$"
+    return r"""\begin{%s}
+%s
+\end{%s}""" % (env, s, env)
+  
+  def __str__(self):
+    return "matheq"
+  
 
 class BlockMathTranspiler(Transpiler):
   def __init__(self, math_manager):
@@ -136,6 +163,20 @@ class BlockMathTranspiler(Transpiler):
       raise MathEquationError(
           f"Error in compiling math code:\n{s}\nError: {e}")
 
+
+class MathTranspiler(Transpiler):
+  def __init__(self, math_manager):
+    super().__init__(math_start_mark, math_end_mark)
+    self._math_manager = math_manager
+  
+  def transpile(self, s):
+    try:
+      return f"${self._math_manager(s)}$"
+    except MathEquationError as e:
+      raise MathEquationError(
+          f"Error in compiling math code:\n{s}\nError: {e}")
+      
+      
 class BoldTranspiler(Transpiler):
   def __init__(self):
     super().__init__(bold_start_mark,

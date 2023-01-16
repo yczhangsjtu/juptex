@@ -31,6 +31,7 @@ class DocumentManager(object):
     self._date = None
     self._title = ""
     self._outline_each_section = False
+    self._hide_subsections = False
     self.define("mm", self.get_mm())
 
   def anonymous(self):
@@ -38,6 +39,9 @@ class DocumentManager(object):
 
   def outline_each_section(self):
     self._outline_each_section = True
+
+  def hide_subsections(self):
+    self._hide_subsections = True
 
   def set_title(self, title):
     self._title = title
@@ -146,15 +150,26 @@ class DocumentManager(object):
   def _render_meta(self, is_slide):
     ret = self._text_manager.render_meta()
     if self._outline_each_section and is_slide:
-      ret += r"""
-\AtBeginSection[]
-{
-    \begin{frame}
-        \frametitle{Outline}
-        \tableofcontents[currentsection]
-    \end{frame}
-}
-"""
+      if self._hide_subsections:
+        ret += r"""
+  \AtBeginSection[]
+  {
+      \begin{frame}
+          \frametitle{Outline}
+          \tableofcontents[currentsection,hideallsubsections]
+      \end{frame}
+  }
+  """
+      else:
+        ret += r"""
+  \AtBeginSection[]
+  {
+      \begin{frame}
+          \frametitle{Outline}
+          \tableofcontents[currentsection]
+      \end{frame}
+  }
+  """
     return ret
 
   def copy_template(self, template):
@@ -189,6 +204,23 @@ class DocumentManager(object):
 
     if self._title is not None and content == "# The End":
       return {"type": "end"}
+    
+    label_matches = re.findall(r"\\label\{([^}]+)\}", content)
+    for label in label_matches:
+      if label.startswith("eqn"):
+        self.define(to_word(label), f"(\\ref{{{label}}})")
+        self.define(to_word(label)+"_full", f"Equation~(\\ref{{{label}}})")
+      elif label.startswith("def"):
+        self.define(to_word(label), f"Definition~\\ref{{{label}}}")
+      elif label.startswith("lem"):
+        self.define(to_word(label), f"Lemma~\\ref{{{label}}}")
+      elif label.startswith("thm"):
+        self.define(to_word(label), f"Theorem~\\ref{{{label}}}")
+      elif label.startswith("col"):
+        self.define(to_word(label), f"Corollary~\\ref{{{label}}}")
+      else:
+        self.define(to_word(label), f"\\ref{{{label}}}")
+    
     lines = content.split("\n")
     start_line = lines[0].strip()
     if len(lines) == 1:
@@ -219,9 +251,12 @@ class DocumentManager(object):
             "title": "",
         }
       if title == "Outline":
+        line = r"\tableofcontents"
+        if self._hide_subsections:
+          line += "[hideallsubsections]"
         return {
             "type": "slide",
-            "lines": [r"\tableofcontents"],
+            "lines": [line],
             "title": title,
         }
       ret_lines = []
@@ -316,7 +351,7 @@ class DocumentManager(object):
     title, comments = extract_html_comment(title)
     title = title.strip()
     if len(comments) > 0:
-      label = comments[0]
+      label = to_label(comments[0])
     else:
       label = to_label(title)
     self.define(f"{prefix}_{to_word(label)}",
@@ -329,7 +364,7 @@ class DocumentManager(object):
     else:
       _, comments = extract_html_comment(rest)
       if len(comments) > 0:
-        label = comments[0]
+        label = to_label(comments[0])
       elif title:
         label = to_label(title)
       else:
@@ -422,11 +457,16 @@ class DocumentManager(object):
           "title": "\n".join(title)
       }
     if start_line.startswith('%%tikz '):
-      name = start_line[start_line.find(' ')+1].strip()
+      name = start_line[start_line.find(' ')+1:].strip()
+      scale = None
+      if name.find('scale:') >= 0:
+        scale = name[name.find('scale:')+6:].strip()
+        name = name[:name.find('scale:')].strip()
       return {
           "type": "tikz",
           "content": "\n".join(lines[1:]),
           "name": name,
+          "scale": scale,
       }
     if start_line == '%%tikz':
       return {
@@ -436,6 +476,10 @@ class DocumentManager(object):
     if start_line.startswith('%%tikzfig ') or \
        start_line.startswith('%%tikzfigwide '):
       name = start_line[start_line.find(' ')+1:].strip()
+      scale = None
+      if name.find('scale:') >= 0:
+        scale = name[name.find('scale:')+6:].strip()
+        name = name[:name.find('scale:')].strip()
       self.define("fig_" + to_word(name),
                   r"Figure~\ref{fig:" + to_label(name) + "}")
       empty_line = lines.index("")
@@ -449,7 +493,8 @@ class DocumentManager(object):
           "content": content,
           "name": name,
           "title": title,
-          "wide": start_line.startswith("%%tikzfigwide")
+          "wide": start_line.startswith("%%tikzfigwide"),
+          "scale": scale,
       }
     if start_line.startswith('%%tikzslide '):
       title = start_line[start_line.find(' ')+1:].strip()
@@ -560,9 +605,10 @@ class DocumentManager(object):
           ret.append({"type": "endslide"})
       elif cell.get("type") == "tikzslide" or (
               is_slide and cell.get("type") == "tikz"
-              and cell.get("title") is not None):
-        ret.append({"type": "startslide", "title": cell.get("title")})
-        ret.append({"type": "tikz", "content": cell.get("content")})
+              and (cell.get("title") is not None or
+                   cell.get("name") is not None)):
+        ret.append({"type": "startslide", "title": cell.get("title") or cell.get("name")})
+        ret.append({"type": "tikz", "content": cell.get("content"), "scale": cell.get("scale")})
         ret.append({"type": "endslide"})
       elif cell.get("type") == "drawslide" or (
               is_slide and cell.get("type") == "draw"
@@ -762,6 +808,10 @@ class DocumentManager(object):
         content = r"""\begin{tikzpicture}
 %s
 \end{tikzpicture}""" % content
+        scale = cell.get("scale")
+        if scale is not None:
+          content = r"\scalebox{%s}{%s}" % (scale, content)
+        content = r"\begin{center}%s\end{center}" % content
         env = "figure" if not cell.get("wide", False) else "figure*"
         if title is not None:
           content = r"""\begin{%s}[ht]\centering

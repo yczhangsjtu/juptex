@@ -136,7 +136,7 @@ template = r"""<header>
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{textcomp}
-\usepackage{ulem}
+\usepackage{soul}
 \usepackage{bbm}
 \usepackage{xcolor}
 \usepackage{CJKutf8}
