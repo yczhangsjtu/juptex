@@ -110,6 +110,14 @@ if isnotebook():
   def drawfiggui(line, content):
     drawgui(line)
 
+  @register_line_magic
+  def drawslidegui(line):
+    drawgui(line)
+
+  @register_line_magic
+  def drawslide(line):
+    return draw(line)
+
 
 def launch_draw_gui(content, filename=None):
   import english2tikz

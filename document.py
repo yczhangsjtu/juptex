@@ -454,7 +454,7 @@ class DocumentManager(object):
       return {
           "type": "drawslide",
           "content": content,
-          "title": "\n".join(title)
+          "title": title,
       }
     if start_line.startswith('%%tikz '):
       name = start_line[start_line.find(' ')+1:].strip()
