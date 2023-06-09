@@ -7,7 +7,7 @@ from pathlib import Path
 from juptex.config import *
 from juptex.matheq import *
 from juptex.text import *
-from juptex.table import *
+# from juptex.table import *
 from juptex.figure import *
 from juptex.algorithm import *
 from juptex.paragraph import *

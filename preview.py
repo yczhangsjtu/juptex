@@ -97,6 +97,7 @@ tikz_code = r"""
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
+\usetikzlibrary{calc}
 \usetikzlibrary{shapes.geometric}
 \usetikzlibrary{decorations.pathreplacing}
 \usetikzlibrary{decorations.text}
