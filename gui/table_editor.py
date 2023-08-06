@@ -43,6 +43,8 @@ PART_SELECTED = 1
 ALL_SELECTED = 2
 
 SELECT_STATE_COLORS = [(255, 255, 255), (127, 127, 127), (0, 0, 255)]
+CELL_CONTENT_BACKGROUND = (220, 220, 220)
+CELL_BORDER = (255, 255, 255)
 
 def vertical_border_selected(row, index):
     assert index >= 0 and index <= get_table_width(), f"Index out of range, {get_table_width()} columns, index {index}"
@@ -92,6 +94,13 @@ def vertical_selector_rect(index):
             Cell.yshift - 20,
             12,
             12)
+
+
+def cell_region_rect():
+    return (Cell.xshift-Cell.distance,
+            Cell.yshift-Cell.distance,
+            get_table_width() * (cell_width+Cell.distance) + Cell.distance,
+            get_table_height() * (cell_height+Cell.distance) + Cell.distance)
 
 
 # Create the selected cells list
@@ -331,15 +340,8 @@ while running:
 
 
     # Draw the cell background
-    pygame.draw.rect(screen,
-                     (220, 220, 220),
-                     (0, 0, *window_size))
-    pygame.draw.rect(screen,
-                     (255, 255, 255),
-                     (Cell.xshift-Cell.distance,
-                      Cell.yshift-Cell.distance,
-                      get_table_width() * (cell_width+Cell.distance) + Cell.distance,
-                      get_table_height() * (cell_height+Cell.distance) + Cell.distance))
+    pygame.draw.rect(screen, CELL_CONTENT_BACKGROUND, (0, 0, *window_size))
+    pygame.draw.rect(screen, CELL_BORDER, cell_region_rect())
     # Draw the table
     for row in table:
         for cell in row:
