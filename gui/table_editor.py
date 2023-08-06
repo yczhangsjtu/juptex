@@ -155,7 +155,7 @@ def on_key_down(event):
             for cell in row:
                 cell.unset_selected()
     elif event.key == pygame.K_TAB and selected_cells:
-        on_press_tab()
+        insert_column()
     elif event.key == pygame.K_d and selected_cells:
         delete_cell()
 
@@ -212,7 +212,7 @@ def on_press_enter():
                 cell.toggle_select_border_and_unselect()
 
 
-def on_press_tab():
+def insert_column():
     global selected_cells
     if selected_cells[0].col == get_table_width() - 1 and pygame.key.get_mods() == 0:
         col = get_table_width()
