@@ -174,3 +174,17 @@ class Cell:
         
     def set_text(self, text):
         self.text = text
+
+    def toggle_select_border_and_unselect(self):
+        if self.selected_left_border:
+            self.left_border = not self.left_border
+        if self.selected_right_border:
+            self.right_border = not self.right_border
+        if self.selected_top_border:
+            self.top_border = not self.top_border
+        if self.selected_bottom_border:
+            self.bottom_border = not self.bottom_border
+        self.unset_selected_left_border()
+        self.unset_selected_right_border()
+        self.unset_selected_top_border()
+        self.unset_selected_bottom_border()
