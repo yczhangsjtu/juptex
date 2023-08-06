@@ -83,14 +83,14 @@ def horizontal_borders_selected():
 def horizontal_selector_rect(index):
     assert index >= 0 and index <= get_table_height(), f"Index out of range, {get_table_height()} rows, index {index}"
     return (Cell.xshift - 20,
-            Cell.yshift + i * (cell_height+Cell.distance) - Cell.distance//2 - 6,
+            Cell.yshift + index * (cell_height+Cell.distance) - Cell.distance//2 - 6,
             12,
             12)
 
 
 def vertical_selector_rect(index):
     assert index >= 0 and index <= get_table_width(), f"Index out of range, {get_table_width()} columns, index {index}"
-    return (Cell.xshift + i * (cell_width+Cell.distance) - Cell.distance//2 - 6,
+    return (Cell.xshift + index * (cell_width+Cell.distance) - Cell.distance//2 - 6,
             Cell.yshift - 20,
             12,
             12)
@@ -101,6 +101,22 @@ def cell_region_rect():
             Cell.yshift-Cell.distance,
             get_table_width() * (cell_width+Cell.distance) + Cell.distance,
             get_table_height() * (cell_height+Cell.distance) + Cell.distance)
+
+
+def draw_border_selectors():
+    # Draw the border selectors
+    horizontal_border_select_state = horizontal_borders_selected()
+    vertical_border_select_state = vertical_borders_selected()
+    for i in range(get_table_height() + 1):
+        pygame.draw.rect(screen, SELECT_STATE_COLORS[horizontal_border_select_state[i]],
+                         horizontal_selector_rect(i), border_radius=3)
+        pygame.draw.rect(screen, (0, 0, 0),
+                         horizontal_selector_rect(i), width=1, border_radius=3)
+    for i in range(get_table_width() + 1):
+        pygame.draw.rect(screen, SELECT_STATE_COLORS[vertical_border_select_state[i]],
+                         vertical_selector_rect(i), border_radius=3)
+        pygame.draw.rect(screen, (0, 0, 0),
+                         vertical_selector_rect(i), width=1, border_radius=3)
 
 
 # Create the selected cells list
@@ -342,24 +358,12 @@ while running:
     # Draw the cell background
     pygame.draw.rect(screen, CELL_CONTENT_BACKGROUND, (0, 0, *window_size))
     pygame.draw.rect(screen, CELL_BORDER, cell_region_rect())
+
     # Draw the table
     for row in table:
         for cell in row:
             cell.draw(screen, editing)
-    
-    # Draw the border selectors
-    horizontal_border_select_state = horizontal_borders_selected()
-    vertical_border_select_state = vertical_borders_selected()
-    for i in range(get_table_height() + 1):
-        pygame.draw.rect(screen, SELECT_STATE_COLORS[horizontal_border_select_state[i]],
-                         horizontal_selector_rect(i), border_radius=3)
-        pygame.draw.rect(screen, (0, 0, 0),
-                         horizontal_selector_rect(i), width=1, border_radius=3)
-    for i in range(get_table_width() + 1):
-        pygame.draw.rect(screen, SELECT_STATE_COLORS[vertical_border_select_state[i]],
-                         vertical_selector_rect(i), border_radius=3)
-        pygame.draw.rect(screen, (0, 0, 0),
-                         vertical_selector_rect(i), width=1, border_radius=3)
+    draw_border_selectors()
 
     # Update the display
     pygame.display.flip()
