@@ -42,6 +42,7 @@ NON_SELECTED = 0
 PART_SELECTED = 1
 ALL_SELECTED = 2
 
+SELECT_STATE_COLORS = [(255, 255, 255), (127, 127, 127), (0, 0, 255)]
 
 def vertical_border_selected(row, index):
     assert index >= 0 and index <= get_table_width(), f"Index out of range, {get_table_width()} columns, index {index}"
@@ -93,12 +94,6 @@ def vertical_selector_rect(index):
             12)
 
 
-def get_border_select_state():
-    vertical_border_select_state = vertical_borders_selected()
-    horizontal_border_select_state = horizontal_borders_selected()
-    return horizontal_border_select_state, vertical_border_select_state
-
-
 # Create the selected cells list
 selected_cells = []
 
@@ -109,7 +104,8 @@ merging = False
 # Run the game loop
 running = True
 while running:
-    horizontal_border_select_state, vertical_border_select_state = get_border_select_state()
+    horizontal_border_select_state = horizontal_borders_selected()
+    vertical_border_select_state = vertical_borders_selected()
     for event in pygame.event.get():
         # Handle keyboard events
         if event.type == pygame.KEYDOWN:
@@ -350,20 +346,15 @@ while running:
             cell.draw(screen, editing)
     
     # Draw the border selectors
-    horizontal_border_select_state, vertical_border_select_state = get_border_select_state()
+    horizontal_border_select_state = horizontal_borders_selected()
+    vertical_border_select_state = vertical_borders_selected()
     for i in range(get_table_height() + 1):
-        pygame.draw.rect(screen,
-                         [(255, 255, 255),
-                          (127, 127, 127),
-                          (0, 0, 255)][horizontal_border_select_state[i]],
+        pygame.draw.rect(screen, SELECT_STATE_COLORS[horizontal_border_select_state[i]],
                          horizontal_selector_rect(i), border_radius=3)
         pygame.draw.rect(screen, (0, 0, 0),
                          horizontal_selector_rect(i), width=1, border_radius=3)
     for i in range(get_table_width() + 1):
-        pygame.draw.rect(screen,
-                         [(255, 255, 255),
-                          (127, 127, 127),
-                          (0, 0, 255)][vertical_border_select_state[i]],
+        pygame.draw.rect(screen, SELECT_STATE_COLORS[vertical_border_select_state[i]],
                          vertical_selector_rect(i), border_radius=3)
         pygame.draw.rect(screen, (0, 0, 0),
                          vertical_selector_rect(i), width=1, border_radius=3)
