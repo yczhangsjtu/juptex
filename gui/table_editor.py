@@ -172,44 +172,54 @@ def edit_selected_cell(event, selected_cell):
 
 def on_press_enter():
     global selected_cells
-    if selected_cells:
-        if selected_cells[0].row == get_table_height() - 1 and pygame.key.get_mods() == 0:
-            added_row_index = get_table_height()
-            selected_col = selected_cells[0].col
-            table.append([Cell(added_row_index, col, cell_width, cell_height) for col in range(get_table_width())])
-            selected_cells = [table[added_row_index][selected_col]]
-            for row in table:
-                for cell in row:
-                    cell.unset_selected()
-            selected_cells[0].set_selected()
-        elif pygame.key.get_mods() & pygame.KMOD_CTRL:
-            selected_row = selected_cells[0].row
-            selected_col = selected_cells[0].col
-            table[:] = table[:selected_row+1] + [[Cell(selected_row+1, col, cell_width, cell_height) for col in range(get_table_width())]] + table[selected_row+1:]
-            for row_index, row in enumerate(table):
-                for cell in row:
-                    cell.row = row_index
-            selected_cells = [table[selected_row+1][selected_col]]
-            for row in table:
-                for cell in row:
-                    cell.unset_selected()
-            selected_cells[0].set_selected()
-        elif pygame.key.get_mods() & pygame.KMOD_SHIFT:
-            selected_row = selected_cells[0].row
-            selected_col = selected_cells[0].col
-            table[:] = table[:selected_row] + [[Cell(selected_row, col, cell_width, cell_height) for col in range(get_table_width())]] + table[selected_row:]
-            for row_index, row in enumerate(table):
-                for cell in row:
-                    cell.row = row_index
-            selected_cells = [table[selected_row][selected_col]]
-            for row in table:
-                for cell in row:
-                    cell.unset_selected()
-            selected_cells[0].set_selected()
-    else:
+
+    if not selected_cells:
         for row in table:
             for cell in row:
                 cell.toggle_select_border_and_unselect()
+        return
+
+    if selected_cells[0].row == get_table_height() - 1 and pygame.key.get_mods() == 0:
+        add_row_at_bottom()
+
+    elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+        insert_row_below()
+
+    elif pygame.key.get_mods() & pygame.KMOD_SHIFT:
+        insert_row_above()
+
+    for row in table:
+        for cell in row:
+            cell.unset_selected()
+
+    selected_cells[0].set_selected()
+
+def add_row_at_bottom():
+    global selected_cells
+    added_row_index = get_table_height()
+    selected_col = selected_cells[0].col
+    table.append([Cell(added_row_index, col, cell_width, cell_height) for col in range(get_table_width())])
+    selected_cells = [table[added_row_index][selected_col]]
+
+def insert_row_below():
+    global selected_cells
+    selected_row = selected_cells[0].row
+    selected_col = selected_cells[0].col
+    table[:] = table[:selected_row+1] + [[Cell(selected_row+1, col, cell_width, cell_height) for col in range(get_table_width())]] + table[selected_row+1:]
+    for row_index, row in enumerate(table):
+        for cell in row:
+            cell.row = row_index
+    selected_cells = [table[selected_row+1][selected_col]]
+
+def insert_row_above():
+    global selected_cells
+    selected_row = selected_cells[0].row
+    selected_col = selected_cells[0].col
+    table[:] = table[:selected_row] + [[Cell(selected_row, col, cell_width, cell_height) for col in range(get_table_width())]] + table[selected_row:]
+    for row_index, row in enumerate(table):
+        for cell in row:
+            cell.row = row_index
+    selected_cells = [table[selected_row][selected_col]]
 
 
 def insert_column():
