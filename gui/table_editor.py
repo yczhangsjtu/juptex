@@ -166,17 +166,21 @@ class Table:
 
     def insert_row_above_selected(self):
         selected_row = self.selected_cells[0].row
+        selected_col = self.selected_cells[0].col
         self.insert_row_at_index(selected_row)
+        self.selected_cells = [self.cells[selected_row][selected_col]]
     
     def insert_column_left_selected(self):
         selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_column_at_index(selected_col)
-        self.selected_cells = [self.cells[selected_row][selected_col+1]]
+        self.selected_cells = [self.cells[selected_row][selected_col]]
     
     def insert_column_right_selected(self):
+        selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_column_at_index(selected_col+1)
+        self.selected_cells = [self.cells[selected_row][selected_col+1]]
 
     def delete_selected_cells(self):
         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
