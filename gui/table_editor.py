@@ -34,6 +34,14 @@ CELL_CONTENT_BACKGROUND = (220, 220, 220)
 CELL_BORDER = (255, 255, 255)
 
 
+def multiple_select_state(lst):
+    if all(lst):
+        return ALL_SELECTED
+    elif any(lst):
+        return PART_SELECTED
+    else:
+        return NON_SELECTED
+
 
 class Table:
     def __init__(self, cell_width, cell_height):
@@ -70,20 +78,14 @@ class Table:
         vertical_border_select_state = [NON_SELECTED for i in range(self.get_table_width()+1)]
         for i in range(self.num_vertical_borders()):
             vselect = [self.vertical_border_selected(row, i) for row in self.cells]
-            if all(vselect):
-                vertical_border_select_state[i] = ALL_SELECTED
-            elif any(vselect):
-                vertical_border_select_state[i] = PART_SELECTED
+            vertical_border_select_state[i] = multiple_select_state(vselect)
         return vertical_border_select_state
 
     def horizontal_borders_selected(self):
         horizontal_border_select_state = [NON_SELECTED for i in range(self.get_table_height()+1)]
         for i in range(self.num_horizontal_borders()):
             hselect = [self.horizontal_border_selected(j, i) for j in range(self.get_table_width())]
-            if all(hselect):
-                horizontal_border_select_state[i] = ALL_SELECTED
-            elif any(hselect):
-                horizontal_border_select_state[i] = PART_SELECTED
+            horizontal_border_select_state[i] = multiple_select_state(hselect)
         return horizontal_border_select_state
 
 
@@ -158,7 +160,7 @@ class Table:
                 cell.row = row_index
         self.selected_cells = [self.cells[selected_row][selected_col]]
 
-    def insert_column(self):
+    def insert_column_at_selected(self):
         """Insert a column at the left or right of the selected cells."""
 
         selected_row = self.selected_cells[0].row
@@ -313,7 +315,7 @@ def on_key_down(event):
             for cell in row:
                 cell.unset_selected()
     elif event.key == pygame.K_TAB and table.selected_cells:
-        table.insert_column()
+        table.insert_column_at_selected()
     elif event.key == pygame.K_d and table.selected_cells:
         table.delete_selected_cells()
 
