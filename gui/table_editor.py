@@ -227,6 +227,40 @@ class Table:
         latex += "\\end{tabular}"
 
         return latex
+    
+    def toggle_row_border(self, i):
+        horizontal_border_select_state = self.horizontal_borders_selected()
+        if horizontal_border_select_state[i] < ALL_SELECTED:
+            if i > 0:
+                for cell in table.cells[i-1]:
+                    cell.set_selected_bottom_border()
+            if i < table.get_table_height():
+                for cell in table.cells[i]:
+                    cell.set_selected_top_border()
+        else:
+            if i > 0:
+                for cell in table.cells[i-1]:
+                    cell.unset_selected_bottom_border()
+            if i < table.get_table_height():
+                for cell in table.cells[i]:
+                    cell.unset_selected_top_border()
+    
+    def toggle_column_border(self, i):
+        vertical_border_select_state = table.vertical_borders_selected()
+        if vertical_border_select_state[i] < ALL_SELECTED:
+            if i > 0:
+                for j in range(table.get_table_height()):
+                    table.cells[j][i-1].set_selected_right_border()
+            if i < table.get_table_width():
+                for j in range(table.get_table_height()):
+                    table.cells[j][i].set_selected_left_border()
+        else:
+            if i > 0:
+                for j in range(table.get_table_height()):
+                    table.cells[j][i-1].unset_selected_right_border()
+            if i < table.get_table_width():
+                for j in range(table.get_table_height()):
+                    table.cells[j][i].unset_selected_left_border()
 
 def on_press_enter():
     if not table.selected_cells:
@@ -275,7 +309,7 @@ def on_key_down(event):
     elif event.key == pygame.K_ESCAPE:
         merging = False
         table.selected_cells.clear()
-        for row in table:
+        for row in table.cells:
             for cell in row:
                 cell.unset_selected()
     elif event.key == pygame.K_TAB and table.selected_cells:
@@ -310,42 +344,16 @@ def on_mouse_down(event):
             elif cell.is_on_bottom_border(mouse_x, mouse_y):
                 cell.toggle_selected_bottom_border()
     
+    # Click on the select-entire-row-border button
     for i in range(table.get_table_height()+1):
         x, y, w, h = table.horizontal_selector_rect(i)
         if x <= mouse_x < x+w and y <= mouse_y < y+h:
-            if horizontal_border_select_state[i] < ALL_SELECTED:
-                if i > 0:
-                    for cell in table.cells[i-1]:
-                        cell.set_selected_bottom_border()
-                if i < table.get_table_height():
-                    for cell in table.cells[i]:
-                        cell.set_selected_top_border()
-            else:
-                if i > 0:
-                    for cell in table.cells[i-1]:
-                        cell.unset_selected_bottom_border()
-                if i < table.get_table_height():
-                    for cell in table.cells[i]:
-                        cell.unset_selected_top_border()
+            table.toggle_row_border(i)
 
     for i in range(table.get_table_width()+1):
         x, y, w, h = table.vertical_selector_rect(i)
         if x <= mouse_x < x+w and y <= mouse_y < y+h:
-            if vertical_border_select_state[i] < ALL_SELECTED:
-                if i > 0:
-                    for j in range(get_table_height()):
-                        table.cells[j][i-1].set_selected_right_border()
-                if i < table.get_table_width():
-                    for j in range(get_table_height()):
-                        table.cells[j][i].set_selected_left_border()
-            else:
-                if i > 0:
-                    for j in range(get_table_height()):
-                        table.cells[j][i-1].unset_selected_right_border()
-                if i < table.get_table_width():
-                    for j in range(get_table_height()):
-                        table.cells[j][i].unset_selected_left_border()
-
+            table.toggle_column_border(i)
 
 def on_mouse_motion(event):
     # Get the mouse position
@@ -356,8 +364,8 @@ def on_mouse_motion(event):
         # Add the hovered cell to the selected cells list
         for row in table.cells:
             for cell in row:
-                if cell.is_inside(mouse_x, mouse_y) and cell not in selected_cells:
-                    selected_cells.append(cell)
+                if cell.is_inside(mouse_x, mouse_y) and cell not in table.selected_cells:
+                    table.selected_cells.append(cell)
                     cell.set_selected()
 
 
