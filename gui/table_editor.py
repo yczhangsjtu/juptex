@@ -32,7 +32,7 @@ ALL_SELECTED = 2
 SELECT_STATE_COLORS = [(255, 255, 255), (127, 127, 127), (0, 0, 255)]
 CELL_CONTENT_BACKGROUND = (220, 220, 220)
 CELL_BORDER = (255, 255, 255)
-
+WHOLE_BORDER_SELECTOR_SIZE = 12
 
 def multiple_select_state(lst):
     if all(lst):
@@ -91,18 +91,18 @@ class Table:
 
     def horizontal_selector_rect(self, index):
         assert index >= 0 and index <= self.get_table_height(), f"Index out of range, {self.get_table_height()} rows, index {index}"
-        return (Cell.xshift - 20,
-                Cell.yshift + index * (self.cell_height+Cell.distance) - Cell.distance//2 - 6,
-                12,
-                12)
+        return (Cell.xshift - WHOLE_BORDER_SELECTOR_SIZE - 8,
+                Cell.yshift + index * (self.cell_height + Cell.distance) - (Cell.distance + WHOLE_BORDER_SELECTOR_SIZE)//2,
+                WHOLE_BORDER_SELECTOR_SIZE,
+                WHOLE_BORDER_SELECTOR_SIZE)
 
 
     def vertical_selector_rect(self, index):
         assert index >= 0 and index <= self.get_table_width(), f"Index out of range, {self.get_table_width()} columns, index {index}"
-        return (Cell.xshift + index * (self.cell_width+Cell.distance) - Cell.distance//2 - 6,
-                Cell.yshift - 20,
-                12,
-                12)
+        return (Cell.xshift + index * (self.cell_width + Cell.distance) - (Cell.distance + WHOLE_BORDER_SELECTOR_SIZE)//2,
+                Cell.yshift - WHOLE_BORDER_SELECTOR_SIZE - 8,
+                WHOLE_BORDER_SELECTOR_SIZE,
+                WHOLE_BORDER_SELECTOR_SIZE)
 
 
     def cell_region_rect(self):
@@ -217,7 +217,7 @@ class Table:
 
     def export_to_latex(self):
         # Initialize the LaTeX code
-        latex = "\\begin{tabular}{|" + "c|"*get_table_width() + "}\n"
+        latex = "\\begin{tabular}{|" + "c|" * table.get_table_width() + "}\n"
 
         # Add the contents of each cell to the LaTeX code
         for row in self.cells:
