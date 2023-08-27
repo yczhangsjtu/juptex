@@ -286,7 +286,7 @@ def on_press_enter():
 
 
 def on_key_down(event):
-    global editing
+    global editing, merging
     # Update the cell text if editing
     if editing:
         if table.selected_cells:
@@ -324,7 +324,6 @@ def on_mouse_down(event):
 
     # Clear the selected cells if the user clicked on an empty space
     table.selected_cells.clear()
-    editing = False
 
     # Check if the user clicked on a cell
     for row in table.cells:
@@ -350,6 +349,7 @@ def on_mouse_down(event):
         if x <= mouse_x < x+w and y <= mouse_y < y+h:
             table.toggle_row_border(i)
 
+    # Click on the select-entire-column-border button
     for i in range(table.get_table_width()+1):
         x, y, w, h = table.vertical_selector_rect(i)
         if x <= mouse_x < x+w and y <= mouse_y < y+h:
@@ -360,7 +360,7 @@ def on_mouse_motion(event):
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     # Check if the user is merging cells
-    if merging:
+    if merging and pygame.mouse.get_pressed()[0]:
         # Add the hovered cell to the selected cells list
         for row in table.cells:
             for cell in row:
@@ -391,7 +391,6 @@ if __name__ == "__main__":
             # Handle the "Quit" event
             elif event.type == pygame.QUIT:
                 running = False
-
 
         # Draw the cell background
         pygame.draw.rect(screen, CELL_CONTENT_BACKGROUND, (0, 0, *window_size))
