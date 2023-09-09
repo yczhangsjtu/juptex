@@ -162,48 +162,61 @@ class Table:
         selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_row_at_index(selected_row+1)
-        self.selected_cells = [self.cells[selected_row+1][selected_col]]
+        self.select_cells([self.cells[selected_row+1][selected_col]])
 
     def insert_row_above_selected(self):
         selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_row_at_index(selected_row)
-        self.selected_cells = [self.cells[selected_row][selected_col]]
+        self.select_cells([self.cells[selected_row][selected_col]])
     
     def insert_column_left_selected(self):
         selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_column_at_index(selected_col)
-        self.selected_cells = [self.cells[selected_row][selected_col]]
+        self.select_cells([self.cells[selected_row][selected_col]])
     
     def insert_column_right_selected(self):
         selected_row = self.selected_cells[0].row
         selected_col = self.selected_cells[0].col
         self.insert_column_at_index(selected_col+1)
-        self.selected_cells = [self.cells[selected_row][selected_col+1]]
+        self.select_cells([self.cells[selected_row][selected_col+1]])
+    
+    def unselect_cells(self):
+        for row in self.cells:
+            for cell in row:
+                cell.unset_selected()
+        self.selected_cells = []
+    
+    def select_cells(self, cells):
+        self.unselect_cells()
+        self.selected_cells = cells
 
     def delete_selected_cells(self):
         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-            if self.get_table_height() > 1:
-                selected_row = self.selected_cells[0].row
-                del self.cells[selected_row]
-                for row_index, row in enumerate(self.cells):
-                    for cell in row:
-                        cell.row = row_index
-                self.selected_cells = []
-                for row in self.cells:
-                    for cell in row:
-                        cell.unset_selected()
-        elif self.get_table_width() > 1:
+            self.delete_selected_row()
+        else:
+            self.delete_selected_column()
+    
+    def delete_selected_row(self):
+        if self.get_table_height() > 1:
+            selected_row = self.selected_cells[0].row
+            del self.cells[selected_row]
+            for row_index, row in enumerate(self.cells):
+                for cell in row:
+                    cell.row = row_index
+            self.selected_cells = []
+            self.unselect_cells()
+    
+    def delete_selected_column(self):
+        if self.get_table_width() > 1:
             selected_col = self.selected_cells[0].col
             for row in self.cells:
                 del row[selected_col]
                 for col_index, cell in enumerate(row):
                     cell.col = col_index
             self.selected_cells = []
-            for row in self.cells:
-                for cell in row:
-                    cell.unset_selected()
+            self.unselect_cells()
 
     def export_to_latex(self):
         # Initialize the LaTeX code
