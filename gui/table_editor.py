@@ -191,6 +191,8 @@ class Table:
     def select_cells(self, cells):
         self.unselect_cells()
         self.selected_cells = cells
+        for cell in cells:
+            cell.set_selected()
 
     def delete_selected_cells(self):
         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
