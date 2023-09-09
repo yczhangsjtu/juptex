@@ -19,11 +19,7 @@ screen.fill((255, 255, 255))
 
 
 
-# Set the initial editing and merging states to False
 editing = False
-merging = False
-
-
 
 NON_SELECTED = 0
 PART_SELECTED = 1
@@ -50,7 +46,50 @@ class Table:
         self.cells = [[Cell(row, col, cell_width, cell_height)
                        for col in range(2)]
                       for row in range(3)]
-        self.selected_cells = []
+    
+    def get_selected_cells(self):
+        return [cell for row in self.cells for cell in row if cell.selected]
+    
+    def has_selected_cells(self):
+        return any(cell.selected for row in self.cells for cell in row)
+
+    def get_single_selected_cell(self):
+        selected_cells = self.get_selected_cells()
+        if len(selected_cells) == 1:
+            return selected_cells[0]
+        return None
+    
+    def get_selected_row(self):
+        selected_cells = self.get_selected_cells()
+        if len(selected_cells) == 0:
+            return None
+        rows = [cell.row for cell in selected_cells]
+        all_rows_are_the_same = all(row == rows[0] for row in rows[1:])
+        if all_rows_are_the_same:
+            return rows[0]
+        return None
+    
+    def get_selected_cells_in_the_same_row(self):
+        selected_row = self.get_selected_row()
+        if selected_row is None:
+            return None
+        return [cell for cell in self.cells[selected_row] if cell.selected]
+    
+    def get_selected_column(self):
+        selected_cells = self.get_selected_cells()
+        if len(selected_cells) == 0:
+            return None
+        columns = [cell.col for cell in selected_cells]
+        all_columns_are_the_same = all(column == columns[0] for column in columns[1:])
+        if all_columns_are_the_same:
+            return columns[0]
+        return None
+    
+    def get_selected_cells_in_the_same_column(self):
+        selected_column = self.get_selected_column()
+        if selected_column is None:
+            return None
+        return [cell for cell in self.cells if cell[selected_column].selected]
 
     def get_table_height(self):
         return len(self.cells)
@@ -159,38 +198,48 @@ class Table:
         self.insert_column_at_index(0)
 
     def insert_row_below_selected(self):
-        selected_row = self.selected_cells[0].row
-        selected_col = self.selected_cells[0].col
-        self.insert_row_at_index(selected_row+1)
-        self.select_cells([self.cells[selected_row+1][selected_col]])
+        selected_row = self.get_selected_row()
+        selected_col = self.get_selected_column()
+        if selected_row is not None:
+            self.insert_row_at_index(selected_row+1)
+            self.unselect_cells()
+            if selected_col is not None:
+                self.select_cells([self.cells[selected_row+1][selected_col]])
 
     def insert_row_above_selected(self):
-        selected_row = self.selected_cells[0].row
-        selected_col = self.selected_cells[0].col
-        self.insert_row_at_index(selected_row)
-        self.select_cells([self.cells[selected_row][selected_col]])
+        selected_row = self.get_selected_row()
+        selected_col = self.get_selected_column()
+        if selected_row is not None:
+            self.insert_row_at_index(selected_row)
+            self.unselect_cells()
+            if selected_col is not None:
+                self.select_cells([self.cells[selected_row][selected_col]])
     
     def insert_column_left_selected(self):
-        selected_row = self.selected_cells[0].row
-        selected_col = self.selected_cells[0].col
-        self.insert_column_at_index(selected_col)
-        self.select_cells([self.cells[selected_row][selected_col]])
+        selected_row = self.get_selected_row()
+        selected_col = self.get_selected_column()
+        if selected_col is not None:
+            self.insert_column_at_index(selected_col)
+            self.unselect_cells()
+            if selected_row is not None:
+                self.select_cells([self.cells[selected_row][selected_col]])
     
     def insert_column_right_selected(self):
-        selected_row = self.selected_cells[0].row
-        selected_col = self.selected_cells[0].col
-        self.insert_column_at_index(selected_col+1)
-        self.select_cells([self.cells[selected_row][selected_col+1]])
+        selected_row = self.get_selected_row()
+        selected_col = self.get_selected_column()
+        if selected_col is not None:
+            self.insert_column_at_index(selected_col+1)
+            self.unselect_cells()
+            if selected_row is not None:
+                self.select_cells([self.cells[selected_row][selected_col+1]])
     
     def unselect_cells(self):
         for row in self.cells:
             for cell in row:
                 cell.unset_selected()
-        self.selected_cells = []
     
     def select_cells(self, cells):
         self.unselect_cells()
-        self.selected_cells = cells
         for cell in cells:
             cell.set_selected()
 
@@ -200,25 +249,32 @@ class Table:
         else:
             self.delete_selected_column()
     
+    def refresh_cell_rows(self):
+        for row_index, row in enumerate(self.cells):
+            for cell in row:
+                cell.row = row_index
+    
+    def refresh_cell_columns(self):
+        for row in self.cells:
+            for col_index, cell in enumerate(row):
+                cell.col = col_index
+    
     def delete_selected_row(self):
         if self.get_table_height() > 1:
-            selected_row = self.selected_cells[0].row
-            del self.cells[selected_row]
-            for row_index, row in enumerate(self.cells):
-                for cell in row:
-                    cell.row = row_index
-            self.selected_cells = []
-            self.unselect_cells()
+            selected_row = self.get_selected_row()
+            if selected_row is not None:
+                del self.cells[selected_row]
+                self.refresh_cell_rows()
+                self.unselect_cells()
     
     def delete_selected_column(self):
         if self.get_table_width() > 1:
-            selected_col = self.selected_cells[0].col
-            for row in self.cells:
-                del row[selected_col]
-                for col_index, cell in enumerate(row):
-                    cell.col = col_index
-            self.selected_cells = []
-            self.unselect_cells()
+            selected_col = self.get_selected_column()
+            if selected_col is not None:
+                for row in self.cells:
+                    del row[selected_col]
+                self.refresh_cell_columns()
+                self.unselect_cells()
 
     def export_to_latex(self):
         # Initialize the LaTeX code
@@ -270,61 +326,47 @@ class Table:
                     table.cells[j][i].unset_selected_left_border()
 
 def on_press_enter():
-    if not table.selected_cells:
+    if not table.has_selected_cells():
         for row in table.cells:
             for cell in row:
                 cell.toggle_select_border_and_unselect()
         return
 
-    if table.selected_cells[0].row == table.get_table_height() - 1 and pygame.key.get_mods() == 0:
+    selected_row = table.get_selected_row()
+    if selected_row == table.get_table_height() - 1 and pygame.key.get_mods() == 0:
         table.add_row_at_bottom()
-
     elif pygame.key.get_mods() & pygame.KMOD_CTRL:
         table.insert_row_below_selected()
-
     elif pygame.key.get_mods() & pygame.KMOD_SHIFT:
         table.insert_row_above_selected()
-
-    for row in table.cells:
-        for cell in row:
-            cell.unset_selected()
-
-    table.selected_cells[0].set_selected()
+    table.unselect_cells()
 
 
 def on_key_down(event):
-    global editing, merging
+    global editing
     # Update the cell text if editing
     if editing:
-        if table.selected_cells:
+        cell = table.get_single_selected_cell()
+        if cell is not None:
             # Get the currently selected cell
             # If multiple selected, only edit the
             # first
-            table.edit_selected_cell(event, table.selected_cells[0])
+            table.edit_selected_cell(event, cell)
         # Stop the editing if the user presses "Escape"
         if event.key == pygame.K_ESCAPE:
             editing = False
-    # Start the cell merging process if "m" is pressed
-    elif event.key == pygame.K_m:
-        merging = True
     elif event.key == pygame.K_i:
         editing = True
-        merging = False
     elif event.key == pygame.K_RETURN:
         on_press_enter()
-    # Stop the cell merging process if "Esc" is pressed
     elif event.key == pygame.K_ESCAPE:
-        merging = False
-        table.selected_cells.clear()
-        for row in table.cells:
-            for cell in row:
-                cell.unset_selected()
-    elif event.key == pygame.K_TAB and table.selected_cells:
+        table.unselect_cells()
+    elif event.key == pygame.K_TAB and table.has_selected_cells():
         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
             table.insert_column_left_selected()
         else:
             table.insert_column_right_selected()
-    elif event.key == pygame.K_d and table.selected_cells:
+    elif event.key == pygame.K_d and table.has_selected_cells():
         table.delete_selected_cells()
 
 
@@ -333,14 +375,13 @@ def on_mouse_down(event):
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     # Clear the selected cells if the user clicked on an empty space
-    table.selected_cells.clear()
+    table.unselect_cells()
 
     # Check if the user clicked on a cell
     for row in table.cells:
         for cell in row:
             if cell.is_inside(mouse_x, mouse_y):
                 # Set the clicked cell as the selected cell
-                table.selected_cells.append(cell)
                 cell.set_selected()
             else:
                 cell.unset_selected()
@@ -368,15 +409,6 @@ def on_mouse_down(event):
 def on_mouse_motion(event):
     # Get the mouse position
     mouse_x, mouse_y = pygame.mouse.get_pos()
-
-    # Check if the user is merging cells
-    if merging and pygame.mouse.get_pressed()[0]:
-        # Add the hovered cell to the selected cells list
-        for row in table.cells:
-            for cell in row:
-                if cell.is_inside(mouse_x, mouse_y) and cell not in table.selected_cells:
-                    table.selected_cells.append(cell)
-                    cell.set_selected()
 
 
 cell_width = 80
